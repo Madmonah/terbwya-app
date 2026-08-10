@@ -18,12 +18,14 @@ export default function RestaurantsExplorer({
   restaurants,
   categories,
   initialCuisine,
+  initialQuery,
 }: {
   restaurants: Restaurant[];
   categories: CuisineCategory[];
   initialCuisine?: string | null;
+  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery || '');
   const [cuisineSlug, setCuisineSlug] = useState<string | null>(initialCuisine ?? null);
   const [sort, setSort] = useState<SortOption>('featured');
   const [showFilters, setShowFilters] = useState(false);

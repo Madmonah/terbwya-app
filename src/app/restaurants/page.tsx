@@ -33,7 +33,7 @@ async function getCategories(): Promise<CuisineCategory[]> {
 export default async function RestaurantsPage({
   searchParams,
 }: {
-  searchParams: { cuisine?: string };
+  searchParams: { cuisine?: string; q?: string };
 }) {
   const [restaurants, categories] = await Promise.all([getRestaurants(), getCategories()]);
 
@@ -43,7 +43,12 @@ export default async function RestaurantsPage({
       <main className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-extrabold text-brand-ink mb-2">كل المطاعم</h1>
         <p className="text-brand-ink/60 mb-6">اختار مطعمك المفضل وابدأ الطلب</p>
-        <RestaurantsExplorer restaurants={restaurants} categories={categories} initialCuisine={searchParams.cuisine || null} />
+        <RestaurantsExplorer
+          restaurants={restaurants}
+          categories={categories}
+          initialCuisine={searchParams.cuisine || null}
+          initialQuery={searchParams.q || ''}
+        />
       </main>
       <Footer />
     </>
