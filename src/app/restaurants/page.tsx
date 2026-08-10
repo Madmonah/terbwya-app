@@ -40,15 +40,23 @@ export default async function RestaurantsPage({
   return (
     <>
       <Header />
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-extrabold text-brand-ink mb-2">كل المطاعم</h1>
-        <p className="text-brand-ink/60 mb-6">اختار مطعمك المفضل وابدأ الطلب</p>
-        <RestaurantsExplorer
-          restaurants={restaurants}
-          categories={categories}
-          initialCuisine={searchParams.cuisine || null}
-          initialQuery={searchParams.q || ''}
-        />
+      <main>
+        <section className="relative overflow-hidden bg-gradient-to-br from-brand-red via-brand-red to-brand-orange text-white">
+          <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
+          <div className="relative max-w-6xl mx-auto px-4 py-10 md:py-14">
+            <h1 className="text-2xl md:text-3xl font-extrabold mb-2">كل المطاعم</h1>
+            <p className="text-white/85">اختار مطعمك المفضل وابدأ الطلب</p>
+          </div>
+        </section>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <RestaurantsExplorer
+            restaurants={restaurants}
+            categories={categories}
+            initialCuisine={searchParams.cuisine || null}
+            initialQuery={searchParams.q || ''}
+          />
+        </div>
       </main>
       <Footer />
     </>

@@ -217,7 +217,8 @@ export default function JoinWizard() {
       <>
         <Header />
         <main className="max-w-lg mx-auto px-4 py-16 text-center">
-          <div className="text-5xl mb-4">🎉</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-mark.svg" alt="" className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-extrabold text-brand-ink mb-2">اتنشر مطعمك على ترباوية!</h1>
           <p className="text-brand-ink/60 mb-8">دلوقتي تقدر تدير مطعمك وتشوف الطلبات من الداشبورد بتاعك.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -237,13 +238,27 @@ export default function JoinWizard() {
   return (
     <>
       <Header />
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-red via-brand-red to-brand-orange text-white">
+        <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
+        <div className="relative max-w-2xl mx-auto px-4 py-10 md:py-14 text-center">
+          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-xs font-bold mb-3">
+            🏪 لأصحاب المطاعم
+          </span>
+          <h1 className="text-2xl md:text-3xl font-extrabold">سجّل مطعمك في ترباوية</h1>
+        </div>
+      </section>
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-extrabold text-brand-ink mb-1">سجّل مطعمك في ترباوية</h1>
-        <p className="text-brand-ink/60 mb-6 text-sm">خطوة {step} من 4</p>
+        <p className="text-brand-ink/60 mb-3 text-sm">خطوة {step} من 4</p>
 
         <div className="flex gap-1.5 mb-8">
           {[1, 2, 3, 4].map((n) => (
-            <div key={n} className={`h-1.5 flex-1 rounded-full ${n <= step ? 'bg-brand-red' : 'bg-brand-cream'}`} />
+            <div
+              key={n}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                n <= step ? 'bg-gradient-to-r from-brand-orange to-brand-red' : 'bg-brand-cream'
+              }`}
+            />
           ))}
         </div>
 
@@ -382,7 +397,7 @@ export default function JoinWizard() {
               <button
                 onClick={handlePublish}
                 disabled={submitting}
-                className="w-full bg-brand-red text-white font-extrabold py-3 rounded-xl hover:bg-brand-red-dark transition-colors disabled:opacity-50"
+                className="w-full bg-gradient-to-br from-brand-orange to-brand-red text-white font-extrabold py-3 rounded-xl hover:shadow-lg hover:shadow-brand-red/20 transition-all disabled:opacity-50"
               >
                 {submitting ? 'جاري النشر...' : 'نشر المطعم 🚀'}
               </button>

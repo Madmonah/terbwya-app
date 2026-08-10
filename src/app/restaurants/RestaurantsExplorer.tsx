@@ -101,8 +101,10 @@ export default function RestaurantsExplorer({
       <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
         <button
           onClick={() => setCuisineSlug(null)}
-          className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm ${
-            !cuisineSlug ? 'bg-brand-red text-white' : 'bg-white border border-brand-amber/40 text-brand-ink'
+          className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm transition-all ${
+            !cuisineSlug
+              ? 'bg-gradient-to-br from-brand-orange to-brand-red text-white shadow-sm'
+              : 'bg-white border border-brand-amber/40 text-brand-ink hover:border-brand-orange'
           }`}
         >
           الكل
@@ -111,8 +113,10 @@ export default function RestaurantsExplorer({
           <button
             key={c.id}
             onClick={() => setCuisineSlug(c.slug === cuisineSlug ? null : c.slug)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm ${
-              cuisineSlug === c.slug ? 'bg-brand-red text-white' : 'bg-white border border-brand-amber/40 text-brand-ink'
+            className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm transition-all ${
+              cuisineSlug === c.slug
+                ? 'bg-gradient-to-br from-brand-orange to-brand-red text-white shadow-sm'
+                : 'bg-white border border-brand-amber/40 text-brand-ink hover:border-brand-orange'
             }`}
           >
             {c.icon} {c.name_ar}
@@ -137,12 +141,12 @@ export default function RestaurantsExplorer({
         </div>
         <button
           onClick={() => setShowFilters((s) => !s)}
-          className="flex items-center gap-1.5 text-xs font-bold text-brand-ink bg-white border border-gray-200 px-3 py-1.5 rounded-lg"
+          className="flex items-center gap-1.5 text-xs font-bold text-brand-ink bg-white border border-brand-amber/40 hover:border-brand-orange px-3 py-1.5 rounded-lg transition-colors"
         >
           <SlidersHorizontal size={14} />
           فلاتر
           {activeFilterCount > 0 && (
-            <span className="bg-brand-red text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+            <span className="bg-gradient-to-br from-brand-orange to-brand-red text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
               {activeFilterCount}
             </span>
           )}
