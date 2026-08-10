@@ -5,7 +5,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-mark.svg" alt="ترباوية" className="w-9 h-9" />
+            <img src="/brand/logo-mark.svg" alt="ترباوية" className="w-12 h-12" />
             <span className="text-xl font-extrabold text-white">ترباوية</span>
           </div>
           <p>منصة اكتشاف وطلب من أفضل المطاعم في مصر.</p>
