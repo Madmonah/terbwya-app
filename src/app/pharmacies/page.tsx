@@ -6,7 +6,14 @@ export default function PharmaciesPage() {
     <>
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-gradient-to-br from-violet-900 via-violet-700 to-violet-500 text-white">
+        <section className="relative overflow-hidden text-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/hero-pharmacy.jpg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-950/90 via-violet-900/75 to-violet-950/95" />
           <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
           <div className="relative max-w-2xl mx-auto px-4 py-16 md:py-24 text-center">

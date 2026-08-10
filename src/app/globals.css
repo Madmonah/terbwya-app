@@ -7,11 +7,15 @@
 }
 
 body {
-  background: #FFF8F0;
-  color: #241A17;
+  background: #F9FAFB;
+  color: #2C1548;
 }
 
-/* شريط سكرول بسيط متناسق مع الهوية */
-::-webkit-scrollbar { height: 8px; width: 8px; }
-::-webkit-scrollbar-thumb { background: #F77F00; border-radius: 999px; }
-::-webkit-scrollbar-track { background: #FFF8F0; }
+/* شريط سكرول رفيع بلون الهوية الموف */
+::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar-thumb { background: #7238B5; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #5C2C93; }
+::-webkit-scrollbar-track { background: #F3F4F6; }
+
+/* Firefox */
+* { scrollbar-color: #7238B5 #F3F4F6; scrollbar-width: thin; }

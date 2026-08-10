@@ -11,7 +11,11 @@ const VERTICALS = [
   { href: '/', label: 'المطاعم', icon: '🍽️' },
   { href: '/pharmacies', label: 'الصيدليات', icon: '💊' },
   { href: '/supermarket', label: 'سوبر ماركت', icon: '🛒' },
+  { href: '/app', label: 'حمّل الأبليكيشن', icon: '📲' },
 ];
+
+const APP_TAB = VERTICALS[VERTICALS.length - 1];
+const SECTION_TABS = VERTICALS.slice(0, -1);
 
 export default function Header() {
   const pathname = usePathname();
@@ -58,7 +62,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 no-underline shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-mark.svg" alt="ترباوية" className="w-8 h-8" />
+          <img src="/brand/logo-icon.png" alt="ترباوية" className="w-9 h-9 rounded-full bg-white/95 p-0.5 object-cover" />
           <span className="text-xl font-extrabold text-white">ترباوية</span>
         </Link>
 
@@ -69,6 +73,12 @@ export default function Header() {
             className="flex items-center gap-1 text-brand-amber hover:text-white no-underline"
           >
             🔥 الدلع مستنيك
+          </Link>
+          <Link
+            href="/app"
+            className="flex items-center gap-1 text-brand-amber hover:text-white no-underline"
+          >
+            📲 حمّل الأبليكيشن
           </Link>
           <Link href="/about" className="text-white/90 hover:text-white no-underline">عن ترباوية</Link>
           <Link href="/join" className="text-white/90 hover:text-white no-underline">انضم كمطعم</Link>
@@ -141,24 +151,37 @@ export default function Header() {
 
       {/* تابات الأقسام */}
       <div className="bg-white border-t border-violet-100">
-        <div className="max-w-6xl mx-auto px-4 flex items-center gap-2 overflow-x-auto">
-          {VERTICALS.map((v) => {
-            const active = v.href === '/' ? pathname === '/' : pathname?.startsWith(v.href);
-            return (
-              <Link
-                key={v.href}
-                href={v.href}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
-                  active
-                    ? 'border-brand-red text-brand-red'
-                    : 'border-transparent text-brand-ink/50 hover:text-brand-red'
-                }`}
-              >
-                <span>{v.icon}</span>
-                {v.label}
-              </Link>
-            );
-          })}
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+            {SECTION_TABS.map((v) => {
+              const active = v.href === '/' ? pathname === '/' : pathname?.startsWith(v.href);
+              return (
+                <Link
+                  key={v.href}
+                  href={v.href}
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
+                    active
+                      ? 'border-brand-red text-brand-red'
+                      : 'border-transparent text-brand-ink/50 hover:text-brand-red'
+                  }`}
+                >
+                  <span>{v.icon}</span>
+                  {v.label}
+                </Link>
+              );
+            })}
+          </div>
+          <Link
+            href={APP_TAB.href}
+            className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 px-3 md:px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
+              pathname?.startsWith(APP_TAB.href)
+                ? 'border-brand-red text-brand-red'
+                : 'border-transparent text-brand-ink/50 hover:text-brand-red'
+            }`}
+          >
+            <span>{APP_TAB.icon}</span>
+            <span className="hidden sm:inline">{APP_TAB.label}</span>
+          </Link>
         </div>
       </div>
 
@@ -167,6 +190,7 @@ export default function Header() {
           <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-semibold">
             <Link href="/restaurants" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">المطاعم</Link>
             <Link href="/offers" onClick={() => setMobileOpen(false)} className="text-brand-amber hover:text-white no-underline py-2 font-bold">🔥 الدلع مستنيك</Link>
+            <Link href="/app" onClick={() => setMobileOpen(false)} className="text-brand-amber hover:text-white no-underline py-2 font-bold">📲 حمّل الأبليكيشن</Link>
             <Link href="/favorites" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2 flex items-center gap-2"><Heart size={16} />المفضلة</Link>
             <Link href="/account/orders" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2 flex items-center gap-2"><ListOrdered size={16} />طلباتي</Link>
             {!isLoggedIn && (
