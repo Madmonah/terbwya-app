@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import HeroSearch from './HeroSearch';
 import { getSupabaseClient } from '@/lib/supabase';
 import { Restaurant, CuisineCategory } from '@/lib/types';
 
@@ -35,43 +36,90 @@ async function getCategories(): Promise<CuisineCategory[]> {
   }
 }
 
+async function getStats(): Promise<{ restaurantCount: number; cityCount: number; avgDelivery: number | null }> {
+  try {
+    const supa = getSupabaseClient();
+    const { data, count } = await supa
+      .from('restaurants')
+      .select('city,avg_delivery_minutes', { count: 'exact' })
+      .eq('status', 'published');
+
+    const rows = (data as { city: string | null; avg_delivery_minutes: number | null }[]) || [];
+    const cityCount = new Set(rows.map((r) => r.city).filter(Boolean)).size;
+    const times = rows.map((r) => r.avg_delivery_minutes).filter((n): n is number => !!n);
+    const avgDelivery = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
+
+    return { restaurantCount: count || 0, cityCount, avgDelivery };
+  } catch {
+    return { restaurantCount: 0, cityCount: 0, avgDelivery: null };
+  }
+}
+
 export default async function HomePage() {
-  const [restaurants, categories] = await Promise.all([getFeaturedRestaurants(), getCategories()]);
+  const [restaurants, categories, stats] = await Promise.all([
+    getFeaturedRestaurants(),
+    getCategories(),
+    getStats(),
+  ]);
 
   return (
     <>
       <Header />
       <main>
         {/* Hero */}
-        <section className="bg-gradient-to-b from-brand-red to-brand-orange text-white">
-          <div className="max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
-            <h1 className="text-3xl md:text-5xl font-extrabold mb-4">
+        <section className="relative overflow-hidden bg-gradient-to-br from-brand-red via-brand-red to-brand-orange text-white">
+          {/* decorative blobs */}
+          <div className="pointer-events-none absolute -top-10 -left-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-80 h-80 rounded-full bg-black/10 blur-3xl" />
+
+          <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
+            <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">
               أحلى أكل، من أحسن مطاعم مصر 🍽️
             </h1>
             <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              ترباوية بتجمعلك المطاعم اللي تستاهل — منيوهات حقيقية، أسعار واضحة، وطلب سهل من غير تعقيد.
+              منيوهات حقيقية، أسعار واضحة، وطلب سهل من غير تعقيد.
             </p>
-            <Link
-              href="/restaurants"
-              className="inline-block bg-white text-brand-red font-extrabold px-8 py-4 rounded-xl2 text-lg hover:bg-brand-cream transition-colors no-underline"
-            >
-              اتصفح المطاعم دلوقتي
-            </Link>
+
+            <HeroSearch />
+
+            {/* Stat pills */}
+            <div className="mt-10 flex items-center justify-center gap-3 md:gap-4 flex-wrap">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+                <div className="text-xl md:text-2xl font-extrabold">
+                  {stats.avgDelivery ? `${stats.avgDelivery} د` : '—'}
+                </div>
+                <div className="text-xs text-white/80 mt-0.5">متوسط التوصيل</div>
+              </div>
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+                <div className="text-xl md:text-2xl font-extrabold">
+                  {stats.cityCount > 0 ? `${stats.cityCount}+` : '—'}
+                </div>
+                <div className="text-xs text-white/80 mt-0.5">مدينة</div>
+              </div>
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+                <div className="text-xl md:text-2xl font-extrabold">
+                  {stats.restaurantCount > 0 ? `${stats.restaurantCount}+` : '—'}
+                </div>
+                <div className="text-xs text-white/80 mt-0.5">مطعم</div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Categories */}
         {categories.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 py-10">
-            <h2 className="text-xl font-bold text-brand-ink mb-4">اختار نوع الأكل</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <section className="max-w-6xl mx-auto px-4 py-12">
+            <h2 className="text-xl font-bold text-brand-ink mb-5">اختار نوع الأكل</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {categories.map((c) => (
                 <Link
                   key={c.id}
                   href={`/restaurants?cuisine=${c.slug}`}
-                  className="flex items-center gap-3 bg-white border border-brand-amber/40 rounded-xl p-4 hover:border-brand-orange hover:shadow-md transition-all no-underline"
+                  className="group flex items-center gap-3 bg-white border border-brand-amber/30 rounded-2xl p-4 hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/10 hover:-translate-y-0.5 transition-all no-underline"
                 >
-                  <span className="text-2xl">{c.icon}</span>
+                  <span className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-brand-cream text-2xl group-hover:bg-brand-orange/10 transition-colors">
+                    {c.icon}
+                  </span>
                   <span className="font-bold text-brand-ink">{c.name_ar}</span>
                 </Link>
               ))}
@@ -80,11 +128,11 @@ export default async function HomePage() {
         )}
 
         {/* Featured restaurants */}
-        <section className="max-w-6xl mx-auto px-4 py-10">
-          <div className="flex items-center justify-between mb-4">
+        <section className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold text-brand-ink">مطاعم مميزة</h2>
             <Link href="/restaurants" className="text-brand-red font-bold text-sm hover:underline">
-              شوف الكل ←
+              عرض الكل ←
             </Link>
           </div>
 
@@ -94,27 +142,45 @@ export default async function HomePage() {
               <p className="text-sm">هتظهر هنا فور ما تتم إضافة المطاعم الأولى لقاعدة البيانات.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
               {restaurants.map((r) => (
                 <Link
                   key={r.id}
                   href={`/restaurants/${r.slug}`}
-                  className="block bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all no-underline"
+                  className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-0.5 transition-all no-underline"
                 >
-                  <div className="aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
+                  <div className="relative aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
                     {r.cover_photo_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.cover_photo_url} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                      <img
+                        src={r.cover_photo_url}
+                        alt={r.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
                     ) : (
                       <span className="text-4xl">🍽️</span>
+                    )}
+                    {r.delivery_fee_egp != null && (
+                      <span className="absolute top-2 right-2 bg-white/95 text-brand-red text-[11px] font-extrabold px-2 py-1 rounded-full shadow-sm">
+                        {r.delivery_fee_egp === 0 ? 'توصيل مجاني' : `توصيل ${r.delivery_fee_egp} ج`}
+                      </span>
                     )}
                   </div>
                   <div className="p-3">
                     <div className="font-bold text-brand-ink text-sm leading-snug line-clamp-1">{r.name}</div>
-                    {r.city && <div className="text-xs text-brand-ink/50 mt-0.5">{r.city}</div>}
-                    {r.rating && (
-                      <div className="text-xs text-brand-orange font-bold mt-1">⭐ {r.rating.toFixed(1)}</div>
-                    )}
+                    <div className="flex items-center gap-2 mt-1 text-xs text-brand-ink/50">
+                      {r.city && <span>{r.city}</span>}
+                      {r.avg_delivery_minutes && <span>· {r.avg_delivery_minutes} د</span>}
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5">
+                      {r.rating ? (
+                        <span className="text-xs text-brand-orange font-bold">⭐ {r.rating.toFixed(1)}</span>
+                      ) : <span />}
+                      {r.min_order_egp != null && (
+                        <span className="text-[11px] text-brand-ink/40">أقل طلب {r.min_order_egp} ج</span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}
