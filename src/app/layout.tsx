@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cairo } from 'next/font/google';
 import './globals.css';
 
@@ -13,12 +13,17 @@ export const metadata: Metadata = {
   title: 'ترباوية — أحلى أكل في مصر',
   description: 'ترباوية: منصة اكتشاف وطلب من أفضل المطاعم في مصر. منيوهات حقيقية، طلب سهل، وأكل زي ما يتقال عليه بالظبط.',
   metadataBase: new URL('https://terbwya.com'),
+  manifest: '/manifest.json',
   openGraph: {
     title: 'ترباوية — أحلى أكل في مصر',
     description: 'اكتشف أفضل المطاعم واطلب أكلك المفضل بسهولة.',
     locale: 'ar_EG',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#5C2C93',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

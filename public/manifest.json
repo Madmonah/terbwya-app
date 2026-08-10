@@ -1,0 +1,34 @@
+{
+  "name": "ترباوية — أحلى أكل في مصر",
+  "short_name": "ترباوية",
+  "description": "منصة اكتشاف وطلب من أفضل المطاعم في مصر. منيوهات حقيقية، طلب سهل، وأكل زي ما يتقال عليه بالظبط.",
+  "start_url": "/?source=pwa",
+  "id": "/?source=pwa",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F9FAFB",
+  "theme_color": "#5C2C93",
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
