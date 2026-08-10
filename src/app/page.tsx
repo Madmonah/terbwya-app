@@ -76,8 +76,8 @@ export default async function HomePage() {
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
           {/* purple gradient overlay for legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-violet-900/75 via-violet-800/55 to-violet-900/85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/5" />
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-950/90 via-violet-900/75 to-violet-950/95" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
           {/* decorative blobs */}
           <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-violet-900/30 blur-3xl" />
