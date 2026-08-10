@@ -103,7 +103,7 @@ export default function RestaurantsExplorer({
           onClick={() => setCuisineSlug(null)}
           className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm transition-all ${
             !cuisineSlug
-              ? 'bg-gradient-to-br from-brand-orange to-brand-red text-white shadow-sm'
+              ? 'bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-sm'
               : 'bg-white border border-brand-amber/40 text-brand-ink hover:border-brand-orange'
           }`}
         >
@@ -115,7 +115,7 @@ export default function RestaurantsExplorer({
             onClick={() => setCuisineSlug(c.slug === cuisineSlug ? null : c.slug)}
             className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm transition-all ${
               cuisineSlug === c.slug
-                ? 'bg-gradient-to-br from-brand-orange to-brand-red text-white shadow-sm'
+                ? 'bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-sm'
                 : 'bg-white border border-brand-amber/40 text-brand-ink hover:border-brand-orange'
             }`}
           >
@@ -146,7 +146,7 @@ export default function RestaurantsExplorer({
           <SlidersHorizontal size={14} />
           فلاتر
           {activeFilterCount > 0 && (
-            <span className="bg-gradient-to-br from-brand-orange to-brand-red text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+            <span className="bg-gradient-to-br from-sky-400 to-sky-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
               {activeFilterCount}
             </span>
           )}

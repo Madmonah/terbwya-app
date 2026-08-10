@@ -67,11 +67,11 @@ export default async function HomePage() {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-brand-red via-brand-red to-brand-orange text-white">
+        <section className="relative overflow-hidden bg-gradient-to-br from-sky-800 via-sky-600 to-sky-400 text-white">
           {/* decorative blobs */}
           <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-black/10 blur-3xl" />
-          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-brand-amber/20 blur-2xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-sky-900/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-sky-200/25 blur-2xl" />
           {/* subtle dot pattern */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
