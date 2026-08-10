@@ -129,6 +129,25 @@ export default async function HomePage() {
           </svg>
         </section>
 
+        {/* Offers teaser */}
+        <section className="max-w-6xl mx-auto px-4 -mt-2 md:-mt-4 relative z-10">
+          <Link
+            href="/offers"
+            className="group flex items-center justify-between gap-4 bg-gradient-to-l from-sky-600 to-sky-400 text-white rounded-2xl px-5 py-4 md:px-8 md:py-5 shadow-lg shadow-sky-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl md:text-3xl">🔥</span>
+              <div>
+                <div className="font-extrabold text-base md:text-lg">الدلع مستنيك</div>
+                <div className="text-white/85 text-xs md:text-sm">عروض لفترة محدودة على أحلى المطاعم</div>
+              </div>
+            </div>
+            <span className="shrink-0 bg-white/15 group-hover:bg-white/25 backdrop-blur-sm rounded-full px-4 py-2 text-xs md:text-sm font-bold transition-colors">
+              شوف العروض ←
+            </span>
+          </Link>
+        </section>
+
         {/* Categories */}
         {categories.length > 0 && (
           <section className="max-w-6xl mx-auto px-4 py-12 bg-brand-cream">

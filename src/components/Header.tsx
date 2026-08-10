@@ -56,6 +56,12 @@ export default function Header() {
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
           <Link href="/restaurants" className="text-white/90 hover:text-white no-underline">المطاعم</Link>
+          <Link
+            href="/offers"
+            className="flex items-center gap-1 text-brand-amber hover:text-white no-underline"
+          >
+            🔥 الدلع مستنيك
+          </Link>
           <Link href="/about" className="text-white/90 hover:text-white no-underline">عن ترباوية</Link>
           <Link href="/join" className="text-white/90 hover:text-white no-underline">انضم كمطعم</Link>
           <Link href="/owner/login" className="text-white/90 hover:text-white no-underline">دخول أصحاب المطاعم</Link>
@@ -129,6 +135,7 @@ export default function Header() {
         <div className="md:hidden bg-brand-red-dark border-t border-white/10">
           <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-semibold">
             <Link href="/restaurants" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">المطاعم</Link>
+            <Link href="/offers" onClick={() => setMobileOpen(false)} className="text-brand-amber hover:text-white no-underline py-2 font-bold">🔥 الدلع مستنيك</Link>
             <Link href="/favorites" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2 flex items-center gap-2"><Heart size={16} />المفضلة</Link>
             <Link href="/account/orders" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2 flex items-center gap-2"><ListOrdered size={16} />طلباتي</Link>
             {!isLoggedIn && (
