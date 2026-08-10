@@ -2,23 +2,16 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSupabaseClient } from '@/lib/supabase';
+import OrderTracker from './OrderTracker';
 
 export const dynamic = 'force-dynamic';
-
-const STATUS_STEPS = [
-  { key: 'pending', label: 'قيد الانتظار', emoji: '⏳' },
-  { key: 'confirmed', label: 'اتأكد', emoji: '✅' },
-  { key: 'preparing', label: 'بيتحضّر', emoji: '👨‍🍳' },
-  { key: 'out_for_delivery', label: 'في الطريق', emoji: '🛵' },
-  { key: 'delivered', label: 'اتسلّم', emoji: '🎉' },
-];
 
 async function getOrder(reference: string) {
   try {
     const supa = getSupabaseClient();
     const { data: order } = await supa
       .from('orders')
-      .select('*, restaurant:restaurants(name, slug, logo_url), order_items(*)')
+      .select('*, restaurant:restaurants(name, slug, logo_url, lat, lng, address, city), order_items(*), reviews(id)')
       .eq('reference', reference)
       .maybeSingle();
     return order;
@@ -45,44 +38,32 @@ export default async function OrderTrackingPage({ params }: { params: { referenc
     );
   }
 
-  const isCancelled = order.status === 'cancelled';
-  const currentStepIdx = STATUS_STEPS.findIndex((s) => s.key === order.status);
-
   return (
     <>
       <Header />
       <main className="max-w-lg mx-auto px-4 py-10">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">{isCancelled ? '❌' : '🧾'}</div>
+          <div className="text-5xl mb-3">{order.status === 'cancelled' ? '❌' : '🧾'}</div>
           <h1 className="text-2xl font-extrabold text-brand-ink mb-1">طلب #{order.reference}</h1>
           <p className="text-brand-ink/60 text-sm">{order.restaurant?.name}</p>
         </div>
 
-        {isCancelled ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-center font-bold mb-6">
-            اتلغى الطلب
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6">
-            <div className="flex justify-between">
-              {STATUS_STEPS.map((s, idx) => (
-                <div key={s.key} className="flex flex-col items-center flex-1">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm mb-1 ${
-                      idx <= currentStepIdx ? 'bg-brand-red text-white' : 'bg-brand-cream text-brand-ink/30'
-                    }`}
-                  >
-                    {s.emoji}
-                  </div>
-                  <span className={`text-[10px] text-center font-bold ${idx <= currentStepIdx ? 'text-brand-ink' : 'text-brand-ink/30'}`}>
-                    {s.label}
-                  </span>
-                  {idx < STATUS_STEPS.length - 1 && (
-                    <div className={`h-0.5 w-full mt-[-14px] ${idx < currentStepIdx ? 'bg-brand-red' : 'bg-brand-cream'}`} />
-                  )}
-                </div>
-              ))}
-            </div>
+        <OrderTracker
+          orderId={order.id}
+          initialStatus={order.status}
+          customerPhone={order.customer_phone}
+          hasReview={(order.reviews?.length || 0) > 0}
+        />
+
+        {order.status !== 'cancelled' && order.status !== 'delivered' && order.restaurant?.lat && order.restaurant?.lng && (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden mb-6">
+            <iframe
+              title="موقع المطعم"
+              className="w-full h-48 border-0"
+              loading="lazy"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${order.restaurant.lng - 0.01}%2C${order.restaurant.lat - 0.01}%2C${order.restaurant.lng + 0.01}%2C${order.restaurant.lat + 0.01}&layer=mapnik&marker=${order.restaurant.lat}%2C${order.restaurant.lng}`}
+            />
+            <p className="text-xs text-brand-ink/50 text-center py-2">📍 موقع المطعم — {order.restaurant.address}</p>
           </div>
         )}
 

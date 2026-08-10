@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseClient, getSupabaseAuthClient } from '@/lib/supabase';
 import { getCart, updateQuantity, cartTotal, clearCart } from '@/lib/cart';
 import { CartItem } from '@/lib/types';
 
@@ -18,12 +18,37 @@ export default function CartPage() {
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
 
   useEffect(() => {
     setCart(getCart());
     const update = () => setCart(getCart());
     window.addEventListener('terbwya-cart-updated', update);
     return () => window.removeEventListener('terbwya-cart-updated', update);
+  }, []);
+
+  // لو العميل عامل تسجيل دخول، نربط الطلب بحسابه (عشان يظهر في "طلباتي")
+  // ونعبّي الاسم/التليفون تلقائيًا
+  useEffect(() => {
+    (async () => {
+      try {
+        const supa = getSupabaseAuthClient();
+        const { data: { session } } = await supa.auth.getSession();
+        if (!session?.user) return;
+        const { data: customer } = await supa
+          .from('customers')
+          .select('id, name, phone')
+          .eq('auth_user_id', session.user.id)
+          .maybeSingle();
+        if (customer) {
+          setCustomerId(customer.id);
+          if (customer.name) setName((prev) => prev || customer.name);
+          if (customer.phone) setPhone((prev) => prev || customer.phone);
+        }
+      } catch {
+        // العميل مش مسجّل دخول — مفيش مشكلة، الطلب هيتبعت كـ guest
+      }
+    })();
   }, []);
 
   const total = cartTotal(cart);
@@ -41,6 +66,7 @@ export default function CartPage() {
         .from('orders')
         .insert({
           restaurant_id: restaurantId,
+          customer_id: customerId,
           customer_name: name || null,
           customer_phone: phone,
           delivery_address: address || null,

@@ -41,6 +41,11 @@ export function clearCartAndAdd(item: CartItem) {
   saveCart([item]);
 }
 
+// إعادة طلب سابق: بيستبدل السلة بالكامل بأصناف الطلب القديم
+export function replaceCart(items: CartItem[]) {
+  saveCart(items);
+}
+
 export function updateQuantity(menuItemId: string, menuSizeId: string | null, quantity: number) {
   let cart = getCart();
   if (quantity <= 0) {
