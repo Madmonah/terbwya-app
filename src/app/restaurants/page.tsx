@@ -41,7 +41,7 @@ export default async function RestaurantsPage({
     <>
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-gradient-to-br from-sky-800 via-sky-600 to-sky-400 text-white">
+        <section className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-sky-500 to-sunset-400 text-white">
           <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
           <div className="relative max-w-6xl mx-auto px-4 py-10 md:py-14">

@@ -238,7 +238,7 @@ export default function JoinWizard() {
   return (
     <>
       <Header />
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-800 via-sky-600 to-sky-400 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-sky-500 to-sunset-400 text-white">
         <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
         <div className="relative max-w-2xl mx-auto px-4 py-10 md:py-14 text-center">
@@ -256,7 +256,7 @@ export default function JoinWizard() {
             <div
               key={n}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
-                n <= step ? 'bg-gradient-to-r from-sky-400 to-sky-600' : 'bg-brand-cream'
+                n <= step ? 'bg-gradient-to-r from-sunset-400 to-violet-600' : 'bg-brand-cream'
               }`}
             />
           ))}
@@ -397,7 +397,7 @@ export default function JoinWizard() {
               <button
                 onClick={handlePublish}
                 disabled={submitting}
-                className="w-full bg-gradient-to-br from-sky-400 to-sky-600 text-white font-extrabold py-3 rounded-xl hover:shadow-lg hover:shadow-brand-red/20 transition-all disabled:opacity-50"
+                className="w-full bg-gradient-to-br from-sunset-400 to-violet-600 text-white font-extrabold py-3 rounded-xl hover:shadow-lg hover:shadow-brand-red/20 transition-all disabled:opacity-50"
               >
                 {submitting ? 'جاري النشر...' : 'نشر المطعم 🚀'}
               </button>

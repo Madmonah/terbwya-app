@@ -30,7 +30,7 @@ export default async function OffersPage() {
     <>
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-gradient-to-br from-sky-800 via-sky-600 to-sky-400 text-white">
+        <section className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-sky-500 to-sunset-400 text-white">
           <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
           <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-sky-200/25 blur-2xl" />
@@ -75,7 +75,7 @@ export default async function OffersPage() {
                       ) : (
                         <span className="text-4xl">🍽️</span>
                       )}
-                      <span className="absolute top-3 right-3 bg-gradient-to-br from-sky-400 to-sky-600 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-sm">
+                      <span className="absolute top-3 right-3 bg-gradient-to-br from-sunset-400 to-violet-600 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-sm">
                         {DISCOUNT_LABELS[i % DISCOUNT_LABELS.length]}
                       </span>
                       <span className="absolute bottom-3 left-3 bg-brand-ink/80 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm">
