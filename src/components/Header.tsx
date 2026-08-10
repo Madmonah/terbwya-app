@@ -151,7 +151,7 @@ export default function Header() {
 
       {/* تابات الأقسام */}
       <div className="bg-white border-t border-violet-100">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-2">
+        <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-x-auto min-w-0">
             {SECTION_TABS.map((v) => {
               const active = v.href === '/' ? pathname === '/' : pathname?.startsWith(v.href);
@@ -159,10 +159,10 @@ export default function Header() {
                 <Link
                   key={v.href}
                   href={v.href}
-                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold no-underline transition-all ${
                     active
-                      ? 'border-brand-red text-brand-red'
-                      : 'border-transparent text-brand-ink/50 hover:text-brand-red'
+                      ? 'bg-brand-red text-white shadow-sm shadow-brand-red/30'
+                      : 'bg-violet-50 text-brand-ink/60 hover:bg-violet-100 hover:text-brand-red'
                   }`}
                 >
                   <span>{v.icon}</span>
@@ -173,10 +173,10 @@ export default function Header() {
           </div>
           <Link
             href={APP_TAB.href}
-            className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 px-3 md:px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
+            className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 px-3 md:px-4 py-2 rounded-full text-sm font-bold no-underline transition-all ${
               pathname?.startsWith(APP_TAB.href)
-                ? 'border-brand-red text-brand-red'
-                : 'border-transparent text-brand-ink/50 hover:text-brand-red'
+                ? 'bg-brand-red text-white shadow-sm shadow-brand-red/30'
+                : 'bg-violet-50 text-brand-ink/60 hover:bg-violet-100 hover:text-brand-red'
             }`}
           >
             <span>{APP_TAB.icon}</span>

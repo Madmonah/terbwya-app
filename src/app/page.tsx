@@ -82,7 +82,13 @@ export default async function HomePage() {
           <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-violet-900/30 blur-3xl" />
 
-          <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-28 text-center">
+          <div className="relative max-w-6xl mx-auto px-4 pt-4 md:pt-6">
+            <div className="flex justify-end">
+              <HeroSearch />
+            </div>
+          </div>
+
+          <div className="relative max-w-6xl mx-auto px-4 pb-16 md:pb-28 pt-6 md:pt-10 text-center">
             <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-xs md:text-sm font-bold mb-5">
               🔥 خصومات لحد ٥٠٪ كل يوم
             </span>
@@ -93,8 +99,6 @@ export default async function HomePage() {
             <p className="text-white/90 text-lg md:text-xl mb-9 max-w-2xl mx-auto">
               منيوهات حقيقية، أسعار واضحة، وطلب سهل من غير تعقيد.
             </p>
-
-            <HeroSearch />
 
             {/* Stat pills */}
             <div className="mt-10 flex items-center justify-center gap-3 md:gap-4 flex-wrap">
