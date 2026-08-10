@@ -69,14 +69,27 @@ export default async function HomePage() {
         {/* Hero */}
         <section className="relative overflow-hidden bg-gradient-to-br from-brand-red via-brand-red to-brand-orange text-white">
           {/* decorative blobs */}
-          <div className="pointer-events-none absolute -top-10 -left-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute bottom-0 right-0 w-80 h-80 rounded-full bg-black/10 blur-3xl" />
+          <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-black/10 blur-3xl" />
+          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-brand-amber/20 blur-2xl" />
+          {/* subtle dot pattern */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #fff 1.5px, transparent 1.5px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
 
-          <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
-            <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">
-              أحلى أكل، من أحسن مطاعم مصر 🍽️
+          <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-28 text-center">
+            <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-xs md:text-sm font-bold mb-5">
+              🔥 خصومات لحد ٥٠٪ كل يوم
+            </span>
+
+            <h1 className="text-3xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight">
+              تعالى ادلعك بأقوى خصومات في مصر
             </h1>
-            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-white/90 text-lg md:text-xl mb-9 max-w-2xl mx-auto">
               منيوهات حقيقية، أسعار واضحة، وطلب سهل من غير تعقيد.
             </p>
 
@@ -84,19 +97,19 @@ export default async function HomePage() {
 
             {/* Stat pills */}
             <div className="mt-10 flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
                 <div className="text-xl md:text-2xl font-extrabold">
                   {stats.avgDelivery ? `${stats.avgDelivery} د` : '—'}
                 </div>
                 <div className="text-xs text-white/80 mt-0.5">متوسط التوصيل</div>
               </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
                 <div className="text-xl md:text-2xl font-extrabold">
                   {stats.cityCount > 0 ? `${stats.cityCount}+` : '—'}
                 </div>
                 <div className="text-xs text-white/80 mt-0.5">مدينة</div>
               </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px]">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
                 <div className="text-xl md:text-2xl font-extrabold">
                   {stats.restaurantCount > 0 ? `${stats.restaurantCount}+` : '—'}
                 </div>
@@ -104,20 +117,33 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+
+          {/* wave divider */}
+          <svg
+            className="relative block w-full text-brand-cream"
+            style={{ height: '40px' }}
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path d="M0,40 C300,0 900,0 1200,40 L1200,40 L0,40 Z" fill="currentColor" />
+          </svg>
         </section>
 
         {/* Categories */}
         {categories.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 py-12">
-            <h2 className="text-xl font-bold text-brand-ink mb-5">اختار نوع الأكل</h2>
+          <section className="max-w-6xl mx-auto px-4 py-12 bg-brand-cream">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink">اختار نوع الأكل</h2>
+              <span className="text-brand-ink/40 text-sm hidden md:block">إيه اللي نفسك فيه النهاردة؟</span>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {categories.map((c) => (
                 <Link
                   key={c.id}
                   href={`/restaurants?cuisine=${c.slug}`}
-                  className="group flex items-center gap-3 bg-white border border-brand-amber/30 rounded-2xl p-4 hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/10 hover:-translate-y-0.5 transition-all no-underline"
+                  className="group flex items-center gap-3 bg-white border border-brand-amber/30 rounded-2xl p-4 hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/10 hover:-translate-y-1 transition-all no-underline"
                 >
-                  <span className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-brand-cream text-2xl group-hover:bg-brand-orange/10 transition-colors">
+                  <span className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-brand-cream text-2xl group-hover:bg-brand-orange/10 group-hover:scale-110 transition-all">
                     {c.icon}
                   </span>
                   <span className="font-bold text-brand-ink">{c.name_ar}</span>
@@ -130,8 +156,14 @@ export default async function HomePage() {
         {/* Featured restaurants */}
         <section className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-bold text-brand-ink">مطاعم مميزة</h2>
-            <Link href="/restaurants" className="text-brand-red font-bold text-sm hover:underline">
+            <div>
+              <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink">مطاعم مميزة</h2>
+              <p className="text-brand-ink/50 text-sm mt-0.5">مختارة بعناية عشانك</p>
+            </div>
+            <Link
+              href="/restaurants"
+              className="text-brand-red font-bold text-sm hover:underline shrink-0"
+            >
               عرض الكل ←
             </Link>
           </div>
@@ -143,11 +175,11 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-              {restaurants.map((r) => (
+              {restaurants.map((r, i) => (
                 <Link
                   key={r.id}
                   href={`/restaurants/${r.slug}`}
-                  className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-0.5 transition-all no-underline"
+                  className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1 transition-all no-underline"
                 >
                   <div className="relative aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
                     {r.cover_photo_url ? (
@@ -160,6 +192,11 @@ export default async function HomePage() {
                       />
                     ) : (
                       <span className="text-4xl">🍽️</span>
+                    )}
+                    {r.featured && (
+                      <span className="absolute top-2 left-2 bg-brand-red text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow-sm">
+                        {i % 2 === 0 ? 'خصم %20' : 'الأعلى تقييم'}
+                      </span>
                     )}
                     {r.delivery_fee_egp != null && (
                       <span className="absolute top-2 right-2 bg-white/95 text-brand-red text-[11px] font-extrabold px-2 py-1 rounded-full shadow-sm">
@@ -189,15 +226,20 @@ export default async function HomePage() {
         </section>
 
         {/* CTA for restaurant owners */}
-        <section className="bg-brand-amber/20 py-12 mt-6">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <h2 className="text-2xl font-extrabold text-brand-ink mb-3">عندك مطعم؟ انضم لترباوية</h2>
-            <p className="text-brand-ink/70 mb-6">
-              اعرض منيو مطعمك لآلاف العملاء، واستقبل طلبات مضمونة بسهولة.
+        <section className="relative overflow-hidden bg-gradient-to-br from-brand-amber/25 via-brand-cream to-brand-orange/15 py-14 mt-6">
+          <div className="pointer-events-none absolute -top-8 right-10 w-40 h-40 rounded-full bg-brand-orange/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-10 w-52 h-52 rounded-full bg-brand-red/10 blur-3xl" />
+          <div className="relative max-w-3xl mx-auto px-4 text-center">
+            <span className="inline-flex items-center gap-1.5 bg-white border border-brand-amber/40 rounded-full px-4 py-1.5 text-xs font-bold text-brand-ink/70 mb-4">
+              🏪 لأصحاب المطاعم
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-brand-ink mb-3">عندك مطعم؟ انضم لترباوية</h2>
+            <p className="text-brand-ink/70 mb-7 max-w-xl mx-auto">
+              اعرض منيو مطعمك لآلاف العملاء، واستقبل طلبات مضمونة بسهولة وبدون عمولات مبالغ فيها.
             </p>
             <Link
               href="/join"
-              className="inline-block bg-brand-red text-white font-extrabold px-6 py-3 rounded-xl hover:bg-brand-red-dark transition-colors no-underline"
+              className="inline-block bg-brand-red text-white font-extrabold px-8 py-3.5 rounded-xl hover:bg-brand-red-dark hover:shadow-lg hover:shadow-brand-red/20 hover:-translate-y-0.5 transition-all no-underline"
             >
               سجّل مطعمك مجانًا
             </Link>
