@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #FFF8F0;
+  color: #241A17;
+}
+
+/* شريط سكرول بسيط متناسق مع الهوية */
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-thumb { background: #F77F00; border-radius: 999px; }
+::-webkit-scrollbar-track { background: #FFF8F0; }
