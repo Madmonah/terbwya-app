@@ -36,30 +36,10 @@ async function getCategories(): Promise<CuisineCategory[]> {
   }
 }
 
-async function getStats(): Promise<{ restaurantCount: number; cityCount: number; avgDelivery: number | null }> {
-  try {
-    const supa = getSupabaseClient();
-    const { data, count } = await supa
-      .from('restaurants')
-      .select('city,avg_delivery_minutes', { count: 'exact' })
-      .eq('status', 'published');
-
-    const rows = (data as { city: string | null; avg_delivery_minutes: number | null }[]) || [];
-    const cityCount = new Set(rows.map((r) => r.city).filter(Boolean)).size;
-    const times = rows.map((r) => r.avg_delivery_minutes).filter((n): n is number => !!n);
-    const avgDelivery = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
-
-    return { restaurantCount: count || 0, cityCount, avgDelivery };
-  } catch {
-    return { restaurantCount: 0, cityCount: 0, avgDelivery: null };
-  }
-}
-
 export default async function HomePage() {
-  const [restaurants, categories, stats] = await Promise.all([
+  const [restaurants, categories] = await Promise.all([
     getFeaturedRestaurants(),
     getCategories(),
-    getStats(),
   ]);
 
   return (
@@ -99,28 +79,6 @@ export default async function HomePage() {
             <p className="text-white/90 text-lg md:text-xl mb-9 max-w-2xl mx-auto">
               منيوهات حقيقية، أسعار واضحة، وطلب سهل من غير تعقيد.
             </p>
-
-            {/* Stat pills */}
-            <div className="mt-10 flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
-                <div className="text-xl md:text-2xl font-extrabold">
-                  {stats.avgDelivery ? `${stats.avgDelivery} د` : '—'}
-                </div>
-                <div className="text-xs text-white/80 mt-0.5">متوسط التوصيل</div>
-              </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
-                <div className="text-xl md:text-2xl font-extrabold">
-                  {stats.cityCount > 0 ? `${stats.cityCount}+` : '—'}
-                </div>
-                <div className="text-xs text-white/80 mt-0.5">مدينة</div>
-              </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 min-w-[110px] hover:bg-white/20 transition-colors">
-                <div className="text-xl md:text-2xl font-extrabold">
-                  {stats.restaurantCount > 0 ? `${stats.restaurantCount}+` : '—'}
-                </div>
-                <div className="text-xs text-white/80 mt-0.5">مطعم</div>
-              </div>
-            </div>
           </div>
 
           {/* wave divider */}

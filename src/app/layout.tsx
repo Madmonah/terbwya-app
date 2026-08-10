@@ -10,12 +10,12 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'ترباوية — أحلى أكل في مصر',
+  title: 'ترباوية — أقوى الخصومات والعروض',
   description: 'ترباوية: منصة اكتشاف وطلب من أفضل المطاعم في مصر. منيوهات حقيقية، طلب سهل، وأكل زي ما يتقال عليه بالظبط.',
   metadataBase: new URL('https://terbwya.com'),
   manifest: '/manifest.json',
   openGraph: {
-    title: 'ترباوية — أحلى أكل في مصر',
+    title: 'ترباوية — أقوى الخصومات والعروض',
     description: 'اكتشف أفضل المطاعم واطلب أكلك المفضل بسهولة.',
     locale: 'ar_EG',
     type: 'website',
