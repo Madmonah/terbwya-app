@@ -1,12 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingBag, Menu as MenuIcon, User, Heart, ListOrdered, LogIn, X } from 'lucide-react';
 import { getCart } from '@/lib/cart';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 
+const VERTICALS = [
+  { href: '/', label: 'المطاعم', icon: '🍽️' },
+  { href: '/pharmacies', label: 'الصيدليات', icon: '💊' },
+  { href: '/supermarket', label: 'سوبر ماركت', icon: '🛒' },
+];
+
 export default function Header() {
+  const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -128,6 +136,29 @@ export default function Header() {
           >
             {mobileOpen ? <X size={22} /> : <MenuIcon size={22} />}
           </button>
+        </div>
+      </div>
+
+      {/* تابات الأقسام */}
+      <div className="bg-white border-t border-violet-100">
+        <div className="max-w-6xl mx-auto px-4 flex items-center gap-2 overflow-x-auto">
+          {VERTICALS.map((v) => {
+            const active = v.href === '/' ? pathname === '/' : pathname?.startsWith(v.href);
+            return (
+              <Link
+                key={v.href}
+                href={v.href}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-sm font-bold border-b-2 no-underline transition-colors ${
+                  active
+                    ? 'border-brand-red text-brand-red'
+                    : 'border-transparent text-brand-ink/50 hover:text-brand-red'
+                }`}
+              >
+                <span>{v.icon}</span>
+                {v.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
 

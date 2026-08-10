@@ -67,11 +67,11 @@ export default async function HomePage() {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-sky-500 to-sunset-400 text-white">
+        <section className="relative overflow-hidden bg-gradient-to-br from-violet-800 via-violet-600 to-violet-400 text-white">
           {/* decorative blobs */}
           <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-sky-900/20 blur-3xl" />
-          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-sky-200/25 blur-2xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-violet-900/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-violet-200/25 blur-2xl" />
           {/* subtle dot pattern */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -133,7 +133,7 @@ export default async function HomePage() {
         <section className="max-w-6xl mx-auto px-4 -mt-2 md:-mt-4 relative z-10">
           <Link
             href="/offers"
-            className="group flex items-center justify-between gap-4 bg-gradient-to-l from-violet-600 via-sky-500 to-sunset-400 text-white rounded-2xl px-5 py-4 md:px-8 md:py-5 shadow-lg shadow-violet-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline"
+            className="group flex items-center justify-between gap-4 bg-gradient-to-l from-violet-500 via-violet-600 to-violet-700 text-white rounded-2xl px-5 py-4 md:px-8 md:py-5 shadow-lg shadow-violet-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline"
           >
             <div className="flex items-center gap-3">
               <span className="text-2xl md:text-3xl">🔥</span>
