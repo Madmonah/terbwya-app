@@ -17,7 +17,7 @@ export default function HeroSearch() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-sm mx-auto flex items-center gap-1.5 bg-white rounded-xl p-1.5 shadow-lg shadow-black/10"
+      className="w-full max-w-sm mr-0 ml-auto flex items-center gap-1.5 bg-white rounded-xl p-1.5 shadow-lg shadow-black/10"
     >
       <div className="relative flex-1">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-ink/30" size={15} />

@@ -149,6 +149,72 @@ export default async function HomePage() {
           </Link>
         </section>
 
+        {/* Verticals — بطاقات صور كبيرة */}
+        <section className="max-w-6xl mx-auto px-4 py-12">
+          <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink mb-5">اختار قسمك</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+            <Link
+              href="/restaurants"
+              className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] no-underline shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/hero-restaurants.jpg"
+                alt="المطاعم"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-violet-950/90 via-violet-950/20 to-transparent" />
+              <div className="relative h-full flex flex-col justify-end p-5 text-white">
+                <span className="text-3xl mb-1">🍽️</span>
+                <span className="text-xl font-extrabold">المطاعم</span>
+                <span className="text-white/80 text-sm mt-0.5">اطلب من أحلى المطاعم القريبة منك</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/pharmacies"
+              className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] no-underline shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/hero-pharmacy.jpg"
+                alt="الصيدليات"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-violet-950/90 via-violet-950/20 to-transparent" />
+              <span className="absolute top-4 left-4 bg-white/90 text-brand-red text-[11px] font-extrabold px-3 py-1 rounded-full">
+                قريبًا
+              </span>
+              <div className="relative h-full flex flex-col justify-end p-5 text-white">
+                <span className="text-3xl mb-1">💊</span>
+                <span className="text-xl font-extrabold">الصيدليات</span>
+                <span className="text-white/80 text-sm mt-0.5">أدويتك ومستلزماتك في دقايق</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/supermarket"
+              className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] no-underline shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/hero-supermarket.jpg"
+                alt="سوبر ماركت"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-violet-950/90 via-violet-950/20 to-transparent" />
+              <span className="absolute top-4 left-4 bg-white/90 text-brand-red text-[11px] font-extrabold px-3 py-1 rounded-full">
+                قريبًا
+              </span>
+              <div className="relative h-full flex flex-col justify-end p-5 text-white">
+                <span className="text-3xl mb-1">🛒</span>
+                <span className="text-xl font-extrabold">سوبر ماركت</span>
+                <span className="text-white/80 text-sm mt-0.5">احتياجات بيتك اليومية بضغطة</span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
         {/* Categories */}
         {categories.length > 0 && (
           <section className="max-w-6xl mx-auto px-4 py-12 bg-white">
