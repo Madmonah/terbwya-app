@@ -67,19 +67,20 @@ export default async function HomePage() {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-violet-800 via-violet-600 to-violet-400 text-white">
+        <section className="relative overflow-hidden text-white">
+          {/* photo background */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/founder.jpeg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+          {/* purple gradient overlay for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-900/75 via-violet-800/55 to-violet-900/85" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/5" />
           {/* decorative blobs */}
           <div className="pointer-events-none absolute -top-24 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-violet-900/20 blur-3xl" />
-          <div className="pointer-events-none absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-violet-200/25 blur-2xl" />
-          {/* subtle dot pattern */}
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #fff 1.5px, transparent 1.5px)',
-              backgroundSize: '24px 24px',
-            }}
-          />
+          <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-violet-900/30 blur-3xl" />
 
           <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-28 text-center">
             <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-xs md:text-sm font-bold mb-5">
@@ -120,7 +121,7 @@ export default async function HomePage() {
 
           {/* wave divider */}
           <svg
-            className="relative block w-full text-brand-cream"
+            className="relative block w-full text-white"
             style={{ height: '40px' }}
             viewBox="0 0 1200 40"
             preserveAspectRatio="none"
@@ -150,7 +151,7 @@ export default async function HomePage() {
 
         {/* Categories */}
         {categories.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 py-12 bg-brand-cream">
+          <section className="max-w-6xl mx-auto px-4 py-12 bg-white">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink">اختار نوع الأكل</h2>
               <span className="text-brand-ink/40 text-sm hidden md:block">إيه اللي نفسك فيه النهاردة؟</span>
@@ -160,9 +161,9 @@ export default async function HomePage() {
                 <Link
                   key={c.id}
                   href={`/restaurants?cuisine=${c.slug}`}
-                  className="group flex items-center gap-3 bg-white border border-brand-amber/30 rounded-2xl p-4 hover:border-brand-orange hover:shadow-lg hover:shadow-brand-orange/10 hover:-translate-y-1 transition-all no-underline"
+                  className="group flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl p-4 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-900/5 hover:-translate-y-1 transition-all no-underline"
                 >
-                  <span className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-brand-cream text-2xl group-hover:bg-brand-orange/10 group-hover:scale-110 transition-all">
+                  <span className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-white text-2xl group-hover:bg-violet-50 group-hover:scale-110 transition-all">
                     {c.icon}
                   </span>
                   <span className="font-bold text-brand-ink">{c.name_ar}</span>
@@ -173,7 +174,7 @@ export default async function HomePage() {
         )}
 
         {/* Featured restaurants */}
-        <section className="max-w-6xl mx-auto px-4 py-12">
+        <section className="max-w-6xl mx-auto px-4 py-12 bg-gray-50">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink">مطاعم مميزة</h2>
@@ -188,7 +189,7 @@ export default async function HomePage() {
           </div>
 
           {restaurants.length === 0 ? (
-            <div className="bg-white border border-dashed border-brand-amber rounded-xl p-10 text-center text-brand-ink/60">
+            <div className="bg-white border border-dashed border-gray-200 rounded-xl p-10 text-center text-brand-ink/60">
               <p className="font-bold mb-1">لسه مفيش مطاعم منشورة</p>
               <p className="text-sm">هتظهر هنا فور ما تتم إضافة المطاعم الأولى لقاعدة البيانات.</p>
             </div>
@@ -245,11 +246,11 @@ export default async function HomePage() {
         </section>
 
         {/* CTA for restaurant owners */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-brand-amber/25 via-brand-cream to-brand-orange/15 py-14 mt-6">
-          <div className="pointer-events-none absolute -top-8 right-10 w-40 h-40 rounded-full bg-brand-orange/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-10 w-52 h-52 rounded-full bg-brand-red/10 blur-3xl" />
+        <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-violet-50/40 py-14 mt-6">
+          <div className="pointer-events-none absolute -top-8 right-10 w-40 h-40 rounded-full bg-violet-200/15 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-10 w-52 h-52 rounded-full bg-violet-300/10 blur-3xl" />
           <div className="relative max-w-3xl mx-auto px-4 text-center">
-            <span className="inline-flex items-center gap-1.5 bg-white border border-brand-amber/40 rounded-full px-4 py-1.5 text-xs font-bold text-brand-ink/70 mb-4">
+            <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-4 py-1.5 text-xs font-bold text-brand-ink/70 mb-4">
               🏪 لأصحاب المطاعم
             </span>
             <h2 className="text-2xl md:text-3xl font-extrabold text-brand-ink mb-3">عندك مطعم؟ انضم لترباوية</h2>
