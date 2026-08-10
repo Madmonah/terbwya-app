@@ -9,7 +9,7 @@ export default function Footer() {
               <img
                 src="/brand/logo-icon.png"
                 alt="ترباوية"
-                className="w-full h-full rounded-full object-cover scale-[2.3]"
+                className="w-full h-full rounded-full object-cover scale-[1.9]"
               />
             </span>
             <span className="text-xl font-extrabold text-white">ترباوية</span>
