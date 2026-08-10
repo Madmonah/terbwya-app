@@ -61,8 +61,18 @@ export default function Header() {
     <header className="sticky top-0 z-40 bg-brand-red text-white shadow-md">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 no-underline shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-icon.png" alt="ترباوية" className="w-16 h-16 rounded-full bg-white/95 p-1 object-cover" />
+          <span
+            className={`relative w-16 h-16 rounded-full bg-white/95 p-1 overflow-hidden shrink-0 ${
+              pathname === '/' ? 'animate-logo-pulse' : ''
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo-icon.png"
+              alt="ترباوية"
+              className="w-full h-full rounded-full object-cover scale-[1.35]"
+            />
+          </span>
           <span className="text-xl font-extrabold text-white">ترباوية</span>
         </Link>
 

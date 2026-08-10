@@ -19,3 +19,19 @@ body {
 
 /* Firefox */
 * { scrollbar-color: #7238B5 #F3F4F6; scrollbar-width: thin; }
+
+/* نبضة خفيفة حول لوجو الهيدر في الصفحة الرئيسية */
+@keyframes logo-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+    transform: scale(1.06);
+  }
+}
+
+.animate-logo-pulse {
+  animation: logo-pulse 2.4s ease-in-out infinite;
+}
