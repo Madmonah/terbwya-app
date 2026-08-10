@@ -50,7 +50,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 no-underline shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-mark.svg" alt="ترباوية" className="w-20 h-20" />
+          <img src="/brand/logo-mark.svg" alt="ترباوية" className="w-24 h-24" />
           <span className="text-xl font-extrabold text-white">ترباوية</span>
         </Link>
 
