@@ -62,7 +62,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 no-underline shrink-0">
           <span
-            className={`relative w-10 h-10 rounded-full bg-white/95 p-0.5 overflow-hidden shrink-0 ${
+            className={`relative w-16 h-16 rounded-full bg-white/95 p-0.5 overflow-hidden shrink-0 ${
               pathname === '/' ? 'animate-logo-pulse' : ''
             }`}
           >
