@@ -70,7 +70,7 @@ export default function Header() {
             <img
               src="/brand/logo-icon.png"
               alt="ترباوية"
-              className="w-full h-full rounded-full object-cover scale-[1.7]"
+              className="w-full h-full rounded-full object-cover scale-[1.55]"
             />
           </span>
           <span className="text-xl font-extrabold text-white">ترباوية</span>

@@ -222,7 +222,7 @@ export default function JoinWizard() {
             <img
               src="/brand/logo-icon.png"
               alt="ترباوية"
-              className="w-full h-full rounded-full object-cover scale-[1.7]"
+              className="w-full h-full rounded-full object-cover scale-[1.55]"
             />
           </span>
           <h1 className="text-2xl font-extrabold text-brand-ink mb-2">اتنشر مطعمك على ترباوية!</h1>

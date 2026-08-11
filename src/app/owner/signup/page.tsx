@@ -102,7 +102,7 @@ export default function OwnerSignupPage() {
             <img
               src="/brand/logo-icon.png"
               alt="ترباوية"
-              className="w-full h-full rounded-full object-cover scale-[1.7]"
+              className="w-full h-full rounded-full object-cover scale-[1.55]"
             />
           </span>
           <h1 className="text-2xl font-extrabold">سجّل حساب مطعمك</h1>

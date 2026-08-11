@@ -74,7 +74,7 @@ export default function OwnerLoginPage() {
             <img
               src="/brand/logo-icon.png"
               alt="ترباوية"
-              className="w-full h-full rounded-full object-cover scale-[1.7]"
+              className="w-full h-full rounded-full object-cover scale-[1.55]"
             />
           </span>
           <h1 className="text-2xl font-extrabold">تسجيل دخول أصحاب المطاعم</h1>
