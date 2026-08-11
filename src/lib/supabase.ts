@@ -30,3 +30,19 @@ export function getSupabaseAuthClient() {
   });
   return authedClient;
 }
+
+// عميل السيرفر فقط بصلاحية service_role — بيتخطى RLS بالكامل.
+// لازم يتستخدم فقط جوه API routes على السيرفر، أبدًا في كود بيوصل للمتصفح.
+export function getSupabaseAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error('Missing Supabase admin env vars: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
+  }
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+    },
+  });
+}
