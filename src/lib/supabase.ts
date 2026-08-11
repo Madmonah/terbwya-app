@@ -8,7 +8,12 @@ export function getSupabaseClient() {
   if (!url || !anonKey) {
     throw new Error('Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
-  return createClient(url, anonKey, { auth: { persistSession: false } });
+  return createClient(url, anonKey, {
+    auth: { persistSession: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+    },
+  });
 }
 
 // نسخة بتخزين الجلسة — لتسجيل دخول/تسجيل أصحاب المطاعم والداشبورد
