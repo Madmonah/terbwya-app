@@ -11,9 +11,9 @@ export default function AboutPage() {
           <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/logo-mark.svg"
+            src="/brand/logo-icon.png"
             alt=""
-            className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 w-40 h-40 opacity-10"
+            className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full opacity-10 object-cover scale-[1.7]"
           />
           <div className="relative max-w-2xl mx-auto px-4 py-14 md:py-20 text-center">
             <h1 className="text-2xl md:text-3xl font-extrabold mb-2">عن ترباوية</h1>

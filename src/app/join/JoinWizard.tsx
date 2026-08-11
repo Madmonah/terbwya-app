@@ -217,8 +217,14 @@ export default function JoinWizard() {
       <>
         <Header />
         <main className="max-w-lg mx-auto px-4 py-16 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-mark.svg" alt="" className="w-16 h-16 mx-auto mb-4" />
+          <span className="relative w-16 h-16 mx-auto mb-4 rounded-full bg-white/95 p-0.5 overflow-hidden block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo-icon.png"
+              alt="ترباوية"
+              className="w-full h-full rounded-full object-cover scale-[1.7]"
+            />
+          </span>
           <h1 className="text-2xl font-extrabold text-brand-ink mb-2">اتنشر مطعمك على ترباوية!</h1>
           <p className="text-brand-ink/60 mb-8">دلوقتي تقدر تدير مطعمك وتشوف الطلبات من الداشبورد بتاعك.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

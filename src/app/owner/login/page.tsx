@@ -69,8 +69,14 @@ export default function OwnerLoginPage() {
         <div className="pointer-events-none absolute -top-16 -left-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 w-64 h-64 rounded-full bg-black/10 blur-3xl" />
         <div className="relative max-w-md mx-auto px-4 py-10 md:py-14 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-mark.svg" alt="" className="w-14 h-14 mx-auto mb-3" />
+          <span className="relative w-14 h-14 mx-auto mb-3 rounded-full bg-white/95 p-0.5 overflow-hidden block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo-icon.png"
+              alt="ترباوية"
+              className="w-full h-full rounded-full object-cover scale-[1.7]"
+            />
+          </span>
           <h1 className="text-2xl font-extrabold">تسجيل دخول أصحاب المطاعم</h1>
         </div>
       </section>
