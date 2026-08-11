@@ -8,20 +8,17 @@ import { Restaurant, CuisineCategory } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 async function getFeaturedRestaurants(): Promise<Restaurant[]> {
-  console.log('[DEBUG] NEXT_PUBLIC_SUPABASE_URL =', process.env.NEXT_PUBLIC_SUPABASE_URL);
   try {
     const supa = getSupabaseClient();
-    const { data, error } = await supa
+    const { data } = await supa
       .from('restaurants')
       .select('id,slug,name,description,city,district,cover_photo_url,logo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured')
       .eq('status', 'published')
       .order('featured', { ascending: false })
       .order('rating', { ascending: false, nullsFirst: false })
       .limit(8);
-    console.log('[DEBUG] getFeaturedRestaurants error =', JSON.stringify(error), 'rowCount =', data?.length);
     return (data as Restaurant[]) || [];
-  } catch (e) {
-    console.log('[DEBUG] getFeaturedRestaurants threw =', String(e));
+  } catch {
     return [];
   }
 }
