@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
-  Loader2, LogOut, Package, ShoppingBag, Plus, Trash2, Pencil, X, Check,
+  Loader2, LogOut, Package, ShoppingBag, Settings,
 } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
+import MenuTab from './MenuTab';
+import SettingsTab from './SettingsTab';
 
 type Tab = 'orders' | 'menu' | 'settings';
 
@@ -179,6 +181,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         <div className="flex gap-2 border-b border-gray-200">
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
+          <TabButton active={tab === 'settings'} onClick={() => setTab('settings')} icon={<Settings size={16} />} label="الإعدادات" />
         </div>
 
         {tab === 'orders' && (
@@ -191,6 +194,14 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             menuItems={menuItems}
             onToggle={toggleAvailability}
             onDelete={deleteMenuItem}
+            onReload={load}
+          />
+        )}
+
+        {tab === 'settings' && (
+          <SettingsTab
+            restaurantId={restaurantId}
+            restaurant={restaurant}
             onReload={load}
           />
         )}
@@ -280,117 +291,3 @@ function OrdersTab({ orders, onUpdateStatus }: { orders: any[]; onUpdateStatus: 
   );
 }
 
-function MenuTab({
-  restaurantId, menuItems, onToggle, onDelete, onReload,
-}: {
-  restaurantId: string;
-  menuItems: any[];
-  onToggle: (id: string, current: boolean) => void;
-  onDelete: (id: string) => void;
-  onReload: () => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  async function handleAdd() {
-    if (!name.trim() || !(Number(price) > 0)) {
-      toast.error('اسم الصنف والسعر مطلوبين');
-      return;
-    }
-    setSaving(true);
-    try {
-      const supa = getSupabaseAuthClient();
-      const { error } = await supa.from('menu_items').insert({
-        restaurant_id: restaurantId,
-        name_ar: name.trim(),
-        price: Number(price),
-        category: category.trim() || null,
-      });
-      if (error) throw error;
-      setName('');
-      setPrice('');
-      setCategory('');
-      setAdding(false);
-      onReload();
-      toast.success('اتضاف الصنف');
-    } catch (e) {
-      toast.error('حصل خطأ في الإضافة');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      {!adding ? (
-        <button
-          onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 text-brand-red font-bold text-sm hover:underline"
-        >
-          <Plus size={16} /> ضيف صنف جديد
-        </button>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="اسم الصنف"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          />
-          <div className="flex gap-2">
-            <input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              type="number"
-              placeholder="السعر"
-              className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="القسم"
-              className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 bg-brand-red text-white font-bold px-4 py-2 rounded-lg text-sm">
-              <Check size={14} /> حفظ
-            </button>
-            <button onClick={() => setAdding(false)} className="flex items-center gap-1 text-brand-ink/50 font-bold px-4 py-2 rounded-lg text-sm">
-              <X size={14} /> إلغاء
-            </button>
-          </div>
-        </div>
-      )}
-
-      {menuItems.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10 text-center text-brand-ink/50">لسه مفيش أصناف</div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-100">
-          {menuItems.map((m) => (
-            <div key={m.id} className="flex items-center justify-between p-3">
-              <div>
-                <div className="font-bold text-brand-ink text-sm">{m.name_ar}</div>
-                <div className="text-xs text-brand-ink/50">{m.price} ج {m.category && `· ${m.category}`}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onToggle(m.id, m.is_available)}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${m.is_available ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
-                >
-                  {m.is_available ? 'متاح' : 'غير متاح'}
-                </button>
-                <button onClick={() => onDelete(m.id)} className="text-red-400 hover:text-red-600">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}

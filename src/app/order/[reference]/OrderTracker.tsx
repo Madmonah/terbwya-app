@@ -15,11 +15,13 @@ const STATUS_STEPS = [
 
 export default function OrderTracker({
   orderId,
+  reference,
   initialStatus,
   customerPhone,
   hasReview,
 }: {
   orderId: string;
+  reference: string;
   initialStatus: string;
   customerPhone: string;
   hasReview: boolean;
@@ -31,29 +33,31 @@ export default function OrderTracker({
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // اشتراك Realtime: تحديث حالة الطلب فورًا بدون ما العميل يعمل refresh
+  // مفيش قراءة مباشرة/Realtime مفتوحة على orders دلوقتي (لأسباب أمنية —
+  // القراءة العامة اتقفلت)، فبنعمل polling كل 15 ثانية عن طريق نفس RPC الآمن
   useEffect(() => {
+    if (status === 'delivered' || status === 'cancelled') return;
     const supa = getSupabaseClient();
-    const channel = supa
-      .channel(`order-${orderId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
-        (payload) => {
-          const newStatus = (payload.new as any).status;
-          if (newStatus && newStatus !== status) {
-            setStatus(newStatus);
-            toast.success('اتحدثت حالة طلبك! 🔔');
-          }
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supa.rpc('get_order_by_reference', {
+          p_reference: reference,
+          p_customer_phone: customerPhone,
+        });
+        if (error || !data) return;
+        const newStatus = (data as any).status;
+        if (newStatus && newStatus !== status) {
+          setStatus(newStatus);
+          toast.success('اتحدثت حالة طلبك! 🔔');
         }
-      )
-      .subscribe();
+      } catch {
+        // تجاهل أخطاء الشبكة المؤقتة، هتحاول تاني في الـ interval الجاي
+      }
+    }, 15000);
 
-    return () => {
-      supa.removeChannel(channel);
-    };
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
+  }, [reference, customerPhone, status]);
 
   const isCancelled = status === 'cancelled';
   const currentStepIdx = STATUS_STEPS.findIndex((s) => s.key === status);

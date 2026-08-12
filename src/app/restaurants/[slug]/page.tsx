@@ -73,7 +73,14 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
         <div className="max-w-4xl mx-auto px-4 -mt-10 relative">
           <div className="bg-white rounded-xl2 shadow-lg p-5">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-extrabold text-brand-ink">{restaurant.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-extrabold text-brand-ink">{restaurant.name}</h1>
+                {restaurant.is_open ? (
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">مفتوح</span>
+                ) : (
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">مقفول دلوقتي</span>
+                )}
+              </div>
               <FavoriteButton restaurantId={restaurant.id} />
             </div>
             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-ink/60">
@@ -85,6 +92,12 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             {restaurant.description && <p className="text-brand-ink/70 mt-3 text-sm">{restaurant.description}</p>}
           </div>
 
+          {!restaurant.is_open && (
+            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-center text-sm font-bold">
+              المطعم مقفول دلوقتي — تقدر تتصفح المنيو بس مش هتقدر تطلب
+            </div>
+          )}
+
           <div className="mt-6">
             <h2 className="text-xl font-bold text-brand-ink mb-4">المنيو</h2>
             {menu.length === 0 ? (
@@ -92,7 +105,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                 المنيو مش متاح دلوقتي.
               </div>
             ) : (
-              <MenuList items={menu} restaurantId={restaurant.id} restaurantName={restaurant.name} />
+              <MenuList items={menu} restaurantId={restaurant.id} restaurantName={restaurant.name} isOpen={restaurant.is_open} />
             )}
           </div>
 

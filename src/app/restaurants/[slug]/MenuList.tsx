@@ -9,10 +9,12 @@ export default function MenuList({
   items,
   restaurantId,
   restaurantName,
+  isOpen,
 }: {
   items: MenuItem[];
   restaurantId: string;
   restaurantName: string;
+  isOpen: boolean;
 }) {
   const grouped = items.reduce<Record<string, MenuItem[]>>((acc, item) => {
     const key = item.category || 'أصناف';
@@ -33,6 +35,7 @@ export default function MenuList({
                 item={item}
                 restaurantId={restaurantId}
                 restaurantName={restaurantName}
+                isOpen={isOpen}
               />
             ))}
           </div>
@@ -46,10 +49,12 @@ function MenuItemRow({
   item,
   restaurantId,
   restaurantName,
+  isOpen,
 }: {
   item: MenuItem;
   restaurantId: string;
   restaurantName: string;
+  isOpen: boolean;
 }) {
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(
     item.sizes && item.sizes.length > 0 ? item.sizes[0].id : null
@@ -61,6 +66,10 @@ function MenuItemRow({
       : item.price;
 
   function handleAdd() {
+    if (!isOpen) {
+      toast.error('المطعم مقفول دلوقتي، مينفعش تطلب');
+      return;
+    }
     const result = addToCart({
       menuItemId: item.id,
       menuSizeId: selectedSizeId,
@@ -113,7 +122,8 @@ function MenuItemRow({
       </div>
       <button
         onClick={handleAdd}
-        className="bg-brand-red text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand-red-dark transition-colors flex-shrink-0"
+        disabled={!isOpen}
+        className="bg-brand-red text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand-red-dark transition-colors flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         إضافة
       </button>

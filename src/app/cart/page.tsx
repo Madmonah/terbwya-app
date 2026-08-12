@@ -10,6 +10,13 @@ import { getSupabaseClient, getSupabaseAuthClient } from '@/lib/supabase';
 import { getCart, updateQuantity, cartTotal, clearCart } from '@/lib/cart';
 import { CartItem } from '@/lib/types';
 
+type RestaurantLiveInfo = {
+  is_open: boolean;
+  status: string;
+  delivery_fee_egp: number | null;
+  min_order_egp: number | null;
+};
+
 export default function CartPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -19,6 +26,7 @@ export default function CartPage() {
   const [city, setCity] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [restaurantInfo, setRestaurantInfo] = useState<RestaurantLiveInfo | null>(null);
 
   useEffect(() => {
     setCart(getCart());
@@ -26,6 +34,28 @@ export default function CartPage() {
     window.addEventListener('terbwya-cart-updated', update);
     return () => window.removeEventListener('terbwya-cart-updated', update);
   }, []);
+
+  // نجيب حالة المطعم اللحظية (مفتوح/مقفول، رسوم التوصيل، الحد الأدنى) عشان
+  // نمنع الطلب لو المطعم قفل وهو العميل فاتح صفحة السلة، ونطبّق رسوم التوصيل صح
+  useEffect(() => {
+    if (cart.length === 0) {
+      setRestaurantInfo(null);
+      return;
+    }
+    (async () => {
+      try {
+        const supa = getSupabaseClient();
+        const { data } = await supa
+          .from('restaurants')
+          .select('is_open, status, delivery_fee_egp, min_order_egp')
+          .eq('id', cart[0].restaurantId)
+          .maybeSingle();
+        setRestaurantInfo(data as RestaurantLiveInfo | null);
+      } catch {
+        setRestaurantInfo(null);
+      }
+    })();
+  }, [cart.length > 0 ? cart[0].restaurantId : null]);
 
   // لو العميل عامل تسجيل دخول، نربط الطلب بحسابه (عشان يظهر في "طلباتي")
   // ونعبّي الاسم/التليفون تلقائيًا
@@ -52,50 +82,66 @@ export default function CartPage() {
   }, []);
 
   const total = cartTotal(cart);
+  const deliveryFee = cart.length > 0 ? (restaurantInfo?.delivery_fee_egp ?? 0) : 0;
+  const minOrder = restaurantInfo?.min_order_egp ?? 0;
+  const grandTotal = total + deliveryFee;
+  const belowMinimum = minOrder > 0 && total < minOrder;
+  const restaurantClosed = restaurantInfo ? (!restaurantInfo.is_open || restaurantInfo.status !== 'published') : false;
 
   async function handleSubmit() {
     if (!phone || cart.length === 0) {
       toast.error('محتاجين رقم موبايلك على الأقل عشان نأكد الطلب');
       return;
     }
+    if (restaurantClosed) {
+      toast.error('المطعم مقفول دلوقتي، جرّب تاني بعدين');
+      return;
+    }
+    if (belowMinimum) {
+      toast.error(`الحد الأدنى للطلب من المطعم ده ${minOrder} ج.م`);
+      return;
+    }
     setSubmitting(true);
     try {
       const supa = getSupabaseClient();
       const restaurantId = cart[0].restaurantId;
-      const { data: order, error } = await supa
-        .from('orders')
-        .insert({
-          restaurant_id: restaurantId,
-          customer_id: customerId,
-          customer_name: name || null,
-          customer_phone: phone,
-          delivery_address: address || null,
-          city: city || null,
-          payment_method: 'cod',
-          subtotal_egp: total,
-          delivery_fee_egp: 0,
-          total_egp: total,
-        })
-        .select('id, reference')
-        .single();
+      const { data, error } = await supa.rpc('create_order', {
+        p_restaurant_id: restaurantId,
+        p_customer_id: customerId,
+        p_customer_name: name || null,
+        p_customer_phone: phone,
+        p_delivery_address: address || null,
+        p_city: city || null,
+        p_district: null,
+        p_notes: null,
+        p_items: cart.map((c) => ({
+          menu_item_id: c.menuItemId,
+          menu_size_id: c.menuSizeId,
+          quantity: c.quantity,
+        })),
+      });
 
-      if (error || !order) throw error;
+      if (error || !data) throw error;
 
-      const items = cart.map((c) => ({
-        order_id: order.id,
-        menu_item_id: c.menuItemId,
-        menu_size_id: c.menuSizeId,
-        item_name: c.name,
-        unit_price: c.price,
-        quantity: c.quantity,
-        line_total: c.price * c.quantity,
-      }));
-      await supa.from('order_items').insert(items);
+      // نخزّن رقم التليفون مؤقتًا محليًا عشان صفحة تتبع الطلب تعرف تجيب بياناته
+      try {
+        window.sessionStorage.setItem(`terbwya_order_phone_${data.reference}`, phone);
+      } catch {}
 
       clearCart();
-      router.push(`/order/${order.reference}`);
-    } catch (e) {
-      toast.error('حصل خطأ في إرسال الطلب، حاول تاني');
+      router.push(`/order/${data.reference}`);
+    } catch (e: any) {
+      const msg = e?.message || '';
+      const knownErrors: Record<string, string> = {
+        restaurant_closed: 'المطعم مقفول دلوقتي، جرّب تاني بعدين',
+        restaurant_not_published: 'المطعم مش متاح دلوقتي',
+        below_minimum_order: `الحد الأدنى للطلب من المطعم ده ${minOrder} ج.م`,
+        menu_item_unavailable: 'صنف في السلة بقى مش متاح، شيله وحاول تاني',
+        menu_size_unavailable: 'مقاس صنف في السلة بقى مش متاح، حاول تاني',
+        empty_cart: 'السلة فاضية',
+        invalid_phone: 'رقم الموبايل مش صحيح',
+      };
+      toast.error(knownErrors[msg] || 'حصل خطأ في إرسال الطلب، حاول تاني');
     } finally {
       setSubmitting(false);
     }
@@ -114,6 +160,12 @@ export default function CartPage() {
           </div>
         ) : (
           <>
+            {restaurantClosed && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-center font-bold mb-4">
+                المطعم ده مقفول دلوقتي — مينفعش تكمّل الطلب
+              </div>
+            )}
+
             <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-100 mb-6">
               {cart.map((item) => (
                 <div key={`${item.menuItemId}-${item.menuSizeId}`} className="flex items-center justify-between p-4">
@@ -136,9 +188,25 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6 flex items-center justify-between">
-              <span className="font-bold text-brand-ink">الإجمالي</span>
-              <span className="font-extrabold text-brand-red text-lg">{total} ج.م</span>
+            {belowMinimum && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-center text-sm font-bold mb-4">
+                الحد الأدنى للطلب من المطعم ده {minOrder} ج.م — لسه ناقصك {(minOrder - total).toFixed(2)} ج.م
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6 space-y-2">
+              <div className="flex items-center justify-between text-sm text-brand-ink/70">
+                <span>المجموع الفرعي</span>
+                <span>{total} ج.م</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-brand-ink/70">
+                <span>رسوم التوصيل</span>
+                <span>{deliveryFee > 0 ? `${deliveryFee} ج.م` : 'مجانية'}</span>
+              </div>
+              <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+                <span className="font-bold text-brand-ink">الإجمالي</span>
+                <span className="font-extrabold text-brand-red text-lg">{grandTotal} ج.م</span>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
@@ -172,10 +240,10 @@ export default function CartPage() {
               <p className="text-xs text-brand-ink/50">الدفع كاش عند الاستلام حاليًا.</p>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || restaurantClosed || belowMinimum}
                 className="w-full bg-brand-red text-white font-extrabold py-3 rounded-xl hover:bg-brand-red-dark transition-colors disabled:opacity-50"
               >
-                {submitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
+                {submitting ? 'جاري الإرسال...' : restaurantClosed ? 'المطعم مقفول' : 'تأكيد الطلب'}
               </button>
             </div>
           </>
