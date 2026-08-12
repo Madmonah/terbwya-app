@@ -36,7 +36,16 @@ export async function subscribeToPush(): Promise<PushSubscriptionPayload | null>
   if (permission !== 'granted') return null;
 
   const registration = await navigator.serviceWorker.ready;
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+  // المفتاح العام بيتجاب من السيرفر (المفاتيح متولّدة ومخزّنة سيرفر-سايد)
+  let publicKey: string | null = null;
+  try {
+    const res = await fetch('/api/push/vapid-public-key');
+    const data = await res.json();
+    publicKey = data.publicKey || null;
+  } catch {
+    return null;
+  }
   if (!publicKey) return null;
 
   const subscription = await registration.pushManager.subscribe({
