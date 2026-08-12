@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Store, ClipboardList, Users, UserCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Store, ClipboardList, Users, UserCircle, LogOut, Bell } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin', label: 'الإحصائيات', icon: LayoutDashboard },
@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/admin/orders', label: 'الطلبات', icon: ClipboardList },
   { href: '/admin/owners', label: 'أصحاب المطاعم', icon: UserCircle },
   { href: '/admin/customers', label: 'العملاء', icon: Users },
+  { href: '/admin/notifications', label: 'الإشعارات', icon: Bell },
 ];
 
 export default function AdminNav() {
