@@ -1,17 +1,43 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
-  Loader2, LogOut, Package, ShoppingBag, Settings,
+  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3,
 } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import MenuTab from './MenuTab';
 import SettingsTab from './SettingsTab';
+import AnalyticsTab from './AnalyticsTab';
+import EnableNotifications from './EnableNotifications';
 
-type Tab = 'orders' | 'menu' | 'settings';
+type Tab = 'orders' | 'menu' | 'analytics' | 'settings';
+
+// صوت تنبيه "طلب جديد" — Web Audio مباشرة من غير ملف صوت
+function playNewOrderSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioCtx();
+    [880, 1174, 880, 1174].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.16;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    });
+  } catch {
+    // المتصفح ممكن يمنع الصوت قبل أي تفاعل — مش مشكلة
+  }
+}
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: 'قيد الانتظار',
@@ -34,6 +60,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
   const [orders, setOrders] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [tab, setTab] = useState<Tab>('orders');
+  const knownOrderIdsRef = useRef<Set<string> | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,6 +92,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         .order('created_at', { ascending: false })
         .limit(100);
       setOrders(ordersData || []);
+      knownOrderIdsRef.current = new Set((ordersData || []).map((o: any) => o.id));
 
       const { data: menuData } = await supa
         .from('menu_items')
@@ -83,6 +111,47 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
   useEffect(() => {
     load();
   }, [load]);
+
+  // مراقبة لايف: كل 20 ثانية نشيك على طلبات جديدة — صوت تنبيه + توست + تغيير عنوان التاب
+  useEffect(() => {
+    if (denied) return;
+    const interval = setInterval(async () => {
+      try {
+        const supa = getSupabaseAuthClient();
+        const { data: fresh } = await supa
+          .from('orders')
+          .select('*, order_items(*)')
+          .eq('restaurant_id', restaurantId)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (!fresh) return;
+
+        const known = knownOrderIdsRef.current;
+        if (known) {
+          const newOnes = fresh.filter((o: any) => !known.has(o.id));
+          if (newOnes.length > 0) {
+            playNewOrderSound();
+            toast.success(
+              newOnes.length === 1
+                ? `🔔 طلب جديد #${newOnes[0].reference}!`
+                : `🔔 ${newOnes.length} طلبات جديدة!`,
+              { duration: 8000 }
+            );
+            document.title = `(${newOnes.length}) 🔔 طلب جديد — ترباوية`;
+            setTimeout(() => {
+              document.title = 'داشبورد المطعم — ترباوية';
+            }, 15000);
+          }
+        }
+        knownOrderIdsRef.current = new Set(fresh.map((o: any) => o.id));
+        setOrders(fresh);
+      } catch {
+        // خطأ شبكة مؤقت — نحاول في الدورة الجاية
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [restaurantId, denied]);
 
   async function logout() {
     const supa = getSupabaseAuthClient();
@@ -164,9 +233,12 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
               الحالة: {restaurant.status === 'published' ? '✅ منشور' : restaurant.status}
             </p>
           </div>
-          <button onClick={logout} className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold flex items-center gap-2">
-            <LogOut className="w-4 h-4" /> خروج
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <EnableNotifications restaurantId={restaurantId} />
+            <button onClick={logout} className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold flex items-center gap-2">
+              <LogOut className="w-4 h-4" /> خروج
+            </button>
+          </div>
         </div>
       </header>
 
@@ -181,6 +253,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         <div className="flex gap-2 border-b border-gray-200">
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
+          <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 size={16} />} label="التحليلات" />
           <TabButton active={tab === 'settings'} onClick={() => setTab('settings')} icon={<Settings size={16} />} label="الإعدادات" />
         </div>
 
@@ -197,6 +270,8 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             onReload={load}
           />
         )}
+
+        {tab === 'analytics' && <AnalyticsTab restaurantId={restaurantId} />}
 
         {tab === 'settings' && (
           <SettingsTab

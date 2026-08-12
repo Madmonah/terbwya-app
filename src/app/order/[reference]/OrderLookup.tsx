@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase';
 import OrderTracker from './OrderTracker';
+import EnableOrderNotifications from './EnableOrderNotifications';
 
 type OrderData = {
   id: string;
@@ -122,6 +123,10 @@ export default function OrderLookup({ reference }: { reference: string }) {
         initialStatus={order.status}
         hasReview={order.has_review}
       />
+
+      {order.status !== 'cancelled' && order.status !== 'delivered' && (
+        <EnableOrderNotifications reference={order.reference} customerPhone={order.customer_phone} />
+      )}
 
       {order.status !== 'cancelled' && order.status !== 'delivered' && order.restaurant?.lat && order.restaurant?.lng && (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden mb-6">
