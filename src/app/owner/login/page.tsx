@@ -28,23 +28,34 @@ export default function OwnerLoginPage() {
       if (signInError) throw signInError;
       if (!data.user) throw new Error('حصل خطأ');
 
-      const { data: ownerRow, error: ownerError } = await supa
+      let { data: ownerRow, error: ownerError } = await supa
         .from('restaurant_owners')
         .select('id')
         .eq('auth_user_id', data.user.id)
         .maybeSingle();
 
       if (ownerError) throw ownerError;
+
+      // حساب ناقص (اتعمل في Auth بس من غير صف صاحب المطعم)؟ نصلّحه أوتوماتيك
+      // ونكمّل عادي بدل ما نقول له "سجّل حساب جديد" وهو مش هيعرف أصلاً
       if (!ownerRow) {
-        setError('الحساب ده مش مسجّل كصاحب مطعم. سجّل حساب جديد.');
-        setSubmitting(false);
-        return;
+        const { data: repaired, error: repairError } = await supa
+          .from('restaurant_owners')
+          .insert({
+            auth_user_id: data.user.id,
+            business_name: data.user.email?.split('@')[0] || 'صاحب مطعم',
+            email: data.user.email,
+          })
+          .select('id')
+          .single();
+        if (repairError) throw repairError;
+        ownerRow = repaired;
       }
 
       const { data: restaurant } = await supa
         .from('restaurants')
         .select('id')
-        .eq('owner_id', ownerRow.id)
+        .eq('owner_id', ownerRow!.id)
         .limit(1)
         .maybeSingle();
 
@@ -52,7 +63,7 @@ export default function OwnerLoginPage() {
       if (restaurant) {
         router.push(`/owner/dashboard/${restaurant.id}`);
       } else {
-        router.push(`/join?owner=${ownerRow.id}`);
+        router.push(`/join?owner=${ownerRow!.id}`);
       }
     } catch (e: any) {
       console.error('[owner/login] error:', e);

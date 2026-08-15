@@ -40,46 +40,43 @@ export default function AccountSignupPage() {
 
     setSubmitting(true);
     try {
-      const supa = getSupabaseAuthClient();
+      // التسجيل بيتم سيرفر-سايد بحساب مُأكّد فورًا — مفيش إيميل تأكيد خالص
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'customer',
+          name: name.trim(),
+          phone,
+          email: email.trim(),
+          password,
+        }),
+      });
+      const data = await res.json();
 
-      const { data: signUpData, error: signUpError } = await supa.auth.signUp({
+      if (!res.ok) {
+        const errors: Record<string, string> = {
+          email_exists: 'الإيميل ده مسجل قبل كده بكلمة سر مختلفة — سجّل دخول بدل كده',
+          invalid_phone: 'رقم موبايل غير صحيح. لازم يبدأ بـ 01 ويبقى 11 رقم',
+          invalid_email: 'بريد إلكتروني غير صحيح',
+          weak_password: 'كلمة السر لازم تكون 6 حروف/أرقام على الأقل',
+        };
+        setError(errors[data.error] || 'حصل خطأ، حاول تاني');
+        return;
+      }
+
+      const supa = getSupabaseAuthClient();
+      const { error: signInError } = await supa.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
-      if (signUpError) throw signUpError;
-      if (!signUpData.user) throw new Error('حصل خطأ في إنشاء الحساب');
-
-      let userId = signUpData.user.id;
-      if (!signUpData.session) {
-        const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (signInError) {
-          toast.success('اتسجّل حسابك! تحقق من بريدك الإلكتروني لتأكيد الحساب، بعدين سجّل دخول.');
-          router.push('/account/login');
-          return;
-        }
-        userId = signInData.user?.id || userId;
-      }
-
-      const { error: customerError } = await supa
-        .from('customers')
-        .insert({
-          auth_user_id: userId,
-          name: name.trim(),
-          phone: phone.replace(/\D/g, ''),
-          whatsapp_number: phone.replace(/\D/g, ''),
-          email: email.trim(),
-        });
-
-      if (customerError) throw customerError;
+      if (signInError) throw signInError;
 
       toast.success('أهلاً بيك في ترباوية! 🎉');
       router.push('/restaurants');
     } catch (e: any) {
       console.error('[account/signup] error:', e);
-      setError(e?.message?.includes('already registered') ? 'الإيميل ده مسجل قبل كده، سجّل دخول بدل كده' : 'حصل خطأ، حاول تاني');
+      setError('حصل خطأ، حاول تاني');
     } finally {
       setSubmitting(false);
     }
