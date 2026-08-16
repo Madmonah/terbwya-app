@@ -68,7 +68,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data: { session } } = await supa.auth.getSession();
       if (!session?.user) {
         router.replace('/owner/login');
@@ -120,7 +120,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
     if (denied) return;
     const interval = setInterval(async () => {
       try {
-        const supa = getSupabaseAuthClient();
+        const supa = getSupabaseAuthClient('owner');
         const { data: fresh } = await supa
           .from('orders')
           .select('*, order_items(*), rider:riders(name, phone)')
@@ -157,14 +157,14 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
   }, [restaurantId, denied]);
 
   async function logout() {
-    const supa = getSupabaseAuthClient();
+    const supa = getSupabaseAuthClient('owner');
     await supa.auth.signOut();
     router.push('/owner/login');
   }
 
   async function updateOrderStatus(orderId: string, status: string) {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.rpc('update_order_status', { p_order_id: orderId, p_status: status });
       if (error) throw error;
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
@@ -177,7 +177,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
 
   async function toggleAvailability(itemId: string, current: boolean) {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('menu_items').update({ is_available: !current }).eq('id', itemId);
       if (error) throw error;
       setMenuItems((prev) => prev.map((m) => (m.id === itemId ? { ...m, is_available: !current } : m)));
@@ -188,7 +188,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
 
   async function deleteMenuItem(itemId: string) {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('menu_items').delete().eq('id', itemId);
       if (error) throw error;
       setMenuItems((prev) => prev.filter((m) => m.id !== itemId));
@@ -265,7 +265,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             <button
               onClick={async () => {
                 try {
-                  const supa = getSupabaseAuthClient();
+                  const supa = getSupabaseAuthClient('owner');
                   const { error } = await supa.rpc('publish_own_restaurant', { p_restaurant_id: restaurantId });
                   if (error) throw error;
                   toast.success('اتنشر مطعمك! 🎉');

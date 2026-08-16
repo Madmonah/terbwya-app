@@ -70,7 +70,7 @@ export default function RiderSignupPage() {
         return;
       }
 
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { error: signInError } = await supa.auth.signInWithPassword({
         email: email.trim(),
         password,

@@ -98,7 +98,7 @@ export default function MenuTab({
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const payload = {
         name_ar: form.name_ar.trim(),
         price: Number(form.price),

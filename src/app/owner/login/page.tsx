@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -10,6 +10,30 @@ import { getSupabaseAuthClient } from '@/lib/supabase';
 
 export default function OwnerLoginPage() {
   const router = useRouter();
+
+  // لو صاحب المطعم مسجّل دخول أصلاً — نوديه على داشبورد مطعمه على طول
+  useEffect(() => {
+    (async () => {
+      try {
+        const supa = getSupabaseAuthClient('owner');
+        const { data: { session } } = await supa.auth.getSession();
+        if (!session?.user) return;
+        const { data: ownerRow } = await supa
+          .from('restaurant_owners')
+          .select('id')
+          .eq('auth_user_id', session.user.id)
+          .maybeSingle();
+        if (!ownerRow) return;
+        const { data: restaurant } = await supa
+          .from('restaurants')
+          .select('id')
+          .eq('owner_id', ownerRow.id)
+          .limit(1)
+          .maybeSingle();
+        if (restaurant) router.replace(`/owner/dashboard/${restaurant.id}`);
+      } catch {}
+    })();
+  }, [router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +44,7 @@ export default function OwnerLoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data, error: signInError } = await supa.auth.signInWithPassword({
         email: email.trim(),
         password,

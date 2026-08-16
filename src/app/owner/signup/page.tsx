@@ -66,7 +66,7 @@ export default function OwnerSignupPage() {
       }
 
       // الحساب اتعمل — ندخّله على طول
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error: signInError } = await supa.auth.signInWithPassword({
         email: email.trim(),
         password,

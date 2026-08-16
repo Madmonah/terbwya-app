@@ -14,11 +14,16 @@ type AvailableOrder = {
   reference: string;
   status: string;
   total_egp: number;
+  cod_amount_egp?: number;
+  earning_egp?: number;
   delivery_fee_egp: number;
   city: string | null;
   district: string | null;
   delivery_address: string | null;
   created_at: string;
+  items_count?: number;
+  items_summary?: string | null;
+  distance_km?: number | null;
   restaurant: { name: string; address: string | null; city: string | null; lat: number | null; lng: number | null };
 };
 
@@ -28,6 +33,8 @@ type ActiveOrder = AvailableOrder & {
   customer_lat: number | null;
   customer_lng: number | null;
   notes: string | null;
+  arrived_at_restaurant_at: string | null;
+  picked_up_at: string | null;
   items: { item_name: string; quantity: number }[];
   restaurant: AvailableOrder['restaurant'] & { owner_phone: string | null };
 };
@@ -37,10 +44,14 @@ type HistoryEntry = {
   delivery_fee_egp: number;
   delivered_at: string | null;
   restaurant_name: string;
+  my_rating?: number | null;
 };
 
 type DashboardData = {
-  rider: { id: string; name: string; status: string; is_online: boolean; city: string | null; is_restaurant_rider: boolean };
+  rider: {
+    id: string; name: string; status: string; is_online: boolean; city: string | null;
+    is_restaurant_rider: boolean; rating?: number | null; ratings_count?: number;
+  };
   active_orders: ActiveOrder[];
   history: HistoryEntry[];
   earnings: { today_egp: number; total_egp: number; delivered_count: number };
@@ -59,10 +70,11 @@ export default function RiderDashboardPage() {
   const [available, setAvailable] = useState<AvailableOrder[]>([]);
   const [working, setWorking] = useState<string | null>(null);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [pins, setPins] = useState<Record<string, string>>({});
 
   const load = useCallback(async (silent = false) => {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { data: { session } } = await supa.auth.getSession();
       if (!session?.user) {
         router.replace('/rider/login');
@@ -101,7 +113,7 @@ export default function RiderDashboardPage() {
   async function toggleOnline() {
     if (!data) return;
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { error } = await supa.rpc('set_rider_online', { p_online: !data.rider.is_online });
       if (error) throw error;
       setData({ ...data, rider: { ...data.rider, is_online: !data.rider.is_online } });
@@ -114,7 +126,7 @@ export default function RiderDashboardPage() {
   async function acceptOrder(orderId: string) {
     setWorking(orderId);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { error } = await supa.rpc('rider_accept_order', { p_order_id: orderId });
       if (error) throw error;
       toast.success('الطلب بقى معاك! 🛵');
@@ -130,7 +142,7 @@ export default function RiderDashboardPage() {
   async function releaseOrder(orderId: string) {
     setWorking(orderId);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { error } = await supa.rpc('rider_release_order', { p_order_id: orderId });
       if (error) throw error;
       toast.success('اتحرر الطلب ورجع متاح للطيارين');
@@ -146,16 +158,34 @@ export default function RiderDashboardPage() {
     }
   }
 
-  async function updateStatus(orderId: string, status: 'out_for_delivery' | 'delivered') {
+  // بروتوكول الدليفري: وصلت المطعم → استلمت → تسليم بكود من العميل
+  async function updateStage(orderId: string, stage: 'arrived' | 'picked_up' | 'delivered', pin?: string) {
+    if (stage === 'delivered' && (!pin || pin.trim().length < 4)) {
+      toast.error('اطلب كود التسليم (4 أرقام) من العميل واكتبه هنا');
+      return;
+    }
     setWorking(orderId);
     try {
-      const supa = getSupabaseAuthClient();
-      const { error } = await supa.rpc('rider_update_order_status', { p_order_id: orderId, p_status: status });
+      const supa = getSupabaseAuthClient('rider');
+      const { error } = await supa.rpc('rider_update_delivery_stage', {
+        p_order_id: orderId,
+        p_stage: stage,
+        p_pin: pin?.trim() || null,
+      });
       if (error) throw error;
-      toast.success(status === 'out_for_delivery' ? 'في أمان الله! 🛵' : 'تسليم موفق! 🎉');
+      toast.success(
+        stage === 'arrived' ? 'وصلت المطعم 🏪' :
+        stage === 'picked_up' ? 'في أمان الله! 🛵' :
+        'تسليم موفق! 🎉'
+      );
+      setPins((p) => ({ ...p, [orderId]: '' }));
       load();
-    } catch {
-      toast.error('حصل خطأ');
+    } catch (e: any) {
+      toast.error(
+        e?.message === 'wrong_pin'
+          ? 'الكود غلط — اتأكد من العميل من كود التسليم في صفحة تتبع طلبه'
+          : 'حصل خطأ'
+      );
     } finally {
       setWorking(null);
     }
@@ -169,7 +199,7 @@ export default function RiderDashboardPage() {
         toast.error('لازم توافق على الإشعارات من المتصفح');
         return;
       }
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { error } = await supa.from('push_subscriptions').upsert(
         {
           kind: 'rider',
@@ -191,7 +221,7 @@ export default function RiderDashboardPage() {
   }
 
   async function logout() {
-    const supa = getSupabaseAuthClient();
+    const supa = getSupabaseAuthClient('rider');
     await supa.auth.signOut();
     router.push('/rider/login');
   }
@@ -240,7 +270,10 @@ export default function RiderDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="font-black truncate">{rider.name}</p>
-              <p className="text-[11px] text-white/75">{rider.city || 'كل المدن'} · طيار {rider.is_restaurant_rider ? 'مطعم' : 'ترباوية'}</p>
+              <p className="text-[11px] text-white/75">
+                {rider.city || 'كل المدن'} · طيار {rider.is_restaurant_rider ? 'مطعم' : 'ترباوية'}
+                {rider.rating != null && rider.ratings_count ? ` · ⭐ ${Number(rider.rating).toFixed(1)} (${rider.ratings_count})` : ''}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -369,15 +402,38 @@ export default function RiderDashboardPage() {
                       أرباحك من الطلب ده: <span className="font-bold text-green-600">{Number(o.delivery_fee_egp).toLocaleString('ar-EG')} ج</span> (رسوم التوصيل)
                     </p>
 
+                    {/* خط سير التوصيل */}
+                    <div className="flex items-center justify-between text-[10px] font-bold text-brand-ink/50 px-1">
+                      <span className={o.arrived_at_restaurant_at ? 'text-green-600' : ''}>
+                        {o.arrived_at_restaurant_at ? '✅' : '1️⃣'} وصلت المطعم
+                      </span>
+                      <span className="flex-1 border-t border-dashed border-gray-200 mx-1.5" />
+                      <span className={o.picked_up_at ? 'text-green-600' : ''}>
+                        {o.picked_up_at ? '✅' : '2️⃣'} استلمت الطلب
+                      </span>
+                      <span className="flex-1 border-t border-dashed border-gray-200 mx-1.5" />
+                      <span>3️⃣ التسليم بالكود</span>
+                    </div>
+
                     {o.status !== 'out_for_delivery' ? (
                       <>
-                        <button
-                          onClick={() => updateStatus(o.id, 'out_for_delivery')}
-                          disabled={working === o.id}
-                          className="w-full bg-brand-red text-white font-black py-3 rounded-xl disabled:opacity-50"
-                        >
-                          استلمت الطلب من المطعم 🛵
-                        </button>
+                        {!o.arrived_at_restaurant_at ? (
+                          <button
+                            onClick={() => updateStage(o.id, 'arrived')}
+                            disabled={working === o.id}
+                            className="w-full bg-brand-orange text-white font-black py-3 rounded-xl disabled:opacity-50"
+                          >
+                            وصلت المطعم 🏪
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => updateStage(o.id, 'picked_up')}
+                            disabled={working === o.id}
+                            className="w-full bg-brand-red text-white font-black py-3 rounded-xl disabled:opacity-50"
+                          >
+                            استلمت الطلب من المطعم 🛵
+                          </button>
+                        )}
                         <button
                           onClick={() => releaseOrder(o.id)}
                           disabled={working === o.id}
@@ -387,13 +443,28 @@ export default function RiderDashboardPage() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => updateStatus(o.id, 'delivered')}
-                        disabled={working === o.id}
-                        className="w-full bg-green-600 text-white font-black py-3 rounded-xl disabled:opacity-50"
-                      >
-                        تم التسليم للعميل ✅
-                      </button>
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-brand-ink/60 text-center font-bold">
+                          اطلب كود التسليم من العميل (موجود في صفحة تتبع طلبه) عشان تقفل الطلب
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            value={pins[o.id] || ''}
+                            onChange={(e) => setPins((p) => ({ ...p, [o.id]: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                            inputMode="numeric"
+                            placeholder="- - - -"
+                            dir="ltr"
+                            className="w-28 text-center border-2 border-green-200 rounded-xl px-3 py-2.5 font-black tracking-[0.4em] text-lg"
+                          />
+                          <button
+                            onClick={() => updateStage(o.id, 'delivered', pins[o.id])}
+                            disabled={working === o.id || (pins[o.id] || '').length < 4}
+                            className="flex-1 bg-green-600 text-white font-black py-3 rounded-xl disabled:opacity-50"
+                          >
+                            تم التسليم للعميل ✅
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );
@@ -428,23 +499,42 @@ export default function RiderDashboardPage() {
                       {new Date(o.created_at).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' })}
                     </span>
                   </div>
-                  <p className="text-xs text-brand-ink/60 mb-2">
-                    التوصيل لـ: {o.district || ''} {o.city ? `— ${o.city}` : o.delivery_address || ''}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs">
-                      <span className="text-brand-ink/50">قيمة الطلب: </span>
-                      <span className="font-bold">{Number(o.total_egp).toLocaleString('ar-EG')} ج</span>
-                      <span className="text-green-600 font-black mr-2">+ {Number(o.delivery_fee_egp).toLocaleString('ar-EG')} ج ليك</span>
+
+                  {/* كل بيانات المشوار قبل ما يقبل */}
+                  <div className="grid grid-cols-3 gap-1.5 mb-2">
+                    <div className="bg-green-50 border border-green-100 rounded-lg py-1.5 text-center">
+                      <p className="text-[9px] font-bold text-green-700/70">أرباحك</p>
+                      <p className="text-sm font-black text-green-700">{Number(o.earning_egp ?? o.delivery_fee_egp).toLocaleString('ar-EG')} ج</p>
                     </div>
-                    <button
-                      onClick={() => acceptOrder(o.id)}
-                      disabled={working === o.id}
-                      className="bg-brand-red text-white font-black text-sm px-5 py-2 rounded-xl disabled:opacity-50"
-                    >
-                      {working === o.id ? '...' : 'اقبل الطلب'}
-                    </button>
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg py-1.5 text-center">
+                      <p className="text-[9px] font-bold text-amber-700/70">تقبضه كاش</p>
+                      <p className="text-sm font-black text-amber-700">{Number(o.cod_amount_egp ?? o.total_egp).toLocaleString('ar-EG')} ج</p>
+                    </div>
+                    <div className="bg-brand-cream rounded-lg py-1.5 text-center border border-gray-100">
+                      <p className="text-[9px] font-bold text-brand-ink/50">المسافة</p>
+                      <p className="text-sm font-black text-brand-ink">{o.distance_km != null ? `${o.distance_km} كم` : '—'}</p>
+                    </div>
                   </div>
+
+                  <p className="text-xs text-brand-ink/60">
+                    🏪 الاستلام: {o.restaurant.name}{o.restaurant.address ? ` — ${o.restaurant.address}` : ''}
+                  </p>
+                  <p className="text-xs text-brand-ink/60 mt-0.5 mb-1">
+                    📍 التسليم: {o.district || ''} {o.city ? `— ${o.city}` : o.delivery_address || ''}
+                  </p>
+                  {o.items_summary && (
+                    <p className="text-[11px] text-brand-ink/45 mb-2 line-clamp-1">
+                      🛍️ {o.items_count ? `${o.items_count} صنف: ` : ''}{o.items_summary}
+                    </p>
+                  )}
+
+                  <button
+                    onClick={() => acceptOrder(o.id)}
+                    disabled={working === o.id}
+                    className="w-full bg-brand-red text-white font-black text-sm py-2.5 rounded-xl disabled:opacity-50"
+                  >
+                    {working === o.id ? '...' : 'اقبل الطلب 🛵'}
+                  </button>
                 </div>
               ))}
             </div>
@@ -467,9 +557,14 @@ export default function RiderDashboardPage() {
                       {h.delivered_at && ` · ${new Date(h.delivered_at).toLocaleString('ar-EG', { day: 'numeric', month: 'numeric', hour: 'numeric', minute: '2-digit' })}`}
                     </p>
                   </div>
-                  <span className="text-sm font-black text-green-600 shrink-0">
-                    +{Number(h.delivery_fee_egp).toLocaleString('ar-EG')} ج
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {h.my_rating != null && (
+                      <span className="text-[11px] font-bold text-brand-orange">⭐ {h.my_rating}</span>
+                    )}
+                    <span className="text-sm font-black text-green-600">
+                      +{Number(h.delivery_fee_egp).toLocaleString('ar-EG')} ج
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

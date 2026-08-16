@@ -35,7 +35,7 @@ export default function BranchesSection({ restaurantId }: { restaurantId: string
 
   const load = useCallback(async () => {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data } = await supa
         .from('restaurant_branches')
         .select('*')
@@ -78,7 +78,7 @@ export default function BranchesSection({ restaurantId }: { restaurantId: string
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('restaurant_branches').insert({
         restaurant_id: restaurantId,
         name: name.trim(),
@@ -104,7 +104,7 @@ export default function BranchesSection({ restaurantId }: { restaurantId: string
   async function toggleOpen(id: string, current: boolean) {
     setWorkingId(id);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa
         .from('restaurant_branches')
         .update({ is_open: !current })
@@ -121,7 +121,7 @@ export default function BranchesSection({ restaurantId }: { restaurantId: string
   async function deleteBranch(id: string) {
     setWorkingId(id);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('restaurant_branches').delete().eq('id', id);
       if (error) throw error;
       toast.success('اتحذف الفرع');

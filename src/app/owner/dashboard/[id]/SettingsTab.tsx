@@ -35,7 +35,7 @@ export default function SettingsTab({
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa
         .from('restaurants')
         .update({

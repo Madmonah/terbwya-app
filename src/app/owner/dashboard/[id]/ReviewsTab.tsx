@@ -23,7 +23,7 @@ export default function ReviewsTab({ restaurantId }: { restaurantId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data } = await supa
         .from('reviews')
         .select('id, rating, comment, owner_reply, owner_reply_at, created_at')
@@ -47,7 +47,7 @@ export default function ReviewsTab({ restaurantId }: { restaurantId: string }) {
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa
         .from('reviews')
         .update({ owner_reply: replyText.trim(), owner_reply_at: new Date().toISOString() })

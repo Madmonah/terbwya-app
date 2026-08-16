@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -9,6 +9,23 @@ import { getSupabaseAuthClient } from '@/lib/supabase';
 
 export default function RiderLoginPage() {
   const router = useRouter();
+
+  // لو الطيار مسجّل دخول أصلاً — على الداشبورد على طول
+  useEffect(() => {
+    (async () => {
+      try {
+        const supa = getSupabaseAuthClient('rider');
+        const { data: { session } } = await supa.auth.getSession();
+        if (!session?.user) return;
+        const { data: riderRow } = await supa
+          .from('riders')
+          .select('id')
+          .eq('auth_user_id', session.user.id)
+          .maybeSingle();
+        if (riderRow) router.replace('/rider/dashboard');
+      } catch {}
+    })();
+  }, [router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +36,7 @@ export default function RiderLoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('rider');
       const { data, error: signInError } = await supa.auth.signInWithPassword({
         email: email.trim(),
         password,

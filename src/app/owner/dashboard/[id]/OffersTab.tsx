@@ -46,7 +46,7 @@ export default function OffersTab({ restaurantId }: { restaurantId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data } = await supa
         .from('restaurant_offers')
         .select('*')
@@ -80,7 +80,7 @@ export default function OffersTab({ restaurantId }: { restaurantId: string }) {
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('restaurant_offers').insert({
         restaurant_id: restaurantId,
         discount_percent: p,
@@ -109,7 +109,7 @@ export default function OffersTab({ restaurantId }: { restaurantId: string }) {
   async function stopOffer(id: string) {
     setWorkingId(id);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa
         .from('restaurant_offers')
         .update({ ends_at: new Date().toISOString() })
@@ -127,7 +127,7 @@ export default function OffersTab({ restaurantId }: { restaurantId: string }) {
   async function deleteOffer(id: string) {
     setWorkingId(id);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('restaurant_offers').delete().eq('id', id);
       if (error) throw error;
       toast.success('اتحذف العرض');

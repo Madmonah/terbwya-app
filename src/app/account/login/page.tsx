@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -10,6 +10,17 @@ import { getSupabaseAuthClient } from '@/lib/supabase';
 
 export default function AccountLoginPage() {
   const router = useRouter();
+
+  // لو مسجّل دخول أصلاً — مفيش داعي لشاشة الدخول تاني
+  useEffect(() => {
+    (async () => {
+      try {
+        const supa = getSupabaseAuthClient();
+        const { data: { session } } = await supa.auth.getSession();
+        if (session?.user) router.replace('/account/orders');
+      } catch {}
+    })();
+  }, [router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);

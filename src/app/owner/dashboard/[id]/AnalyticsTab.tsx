@@ -37,7 +37,7 @@ export default function AnalyticsTab({ restaurantId }: { restaurantId: string })
   useEffect(() => {
     (async () => {
       try {
-        const supa = getSupabaseAuthClient();
+        const supa = getSupabaseAuthClient('owner');
         const since = new Date();
         since.setDate(since.getDate() - 30);
         const { data } = await supa

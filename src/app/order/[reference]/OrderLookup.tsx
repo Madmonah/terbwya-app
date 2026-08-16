@@ -23,10 +23,20 @@ type OrderData = {
   delivery_fee_egp: number;
   total_egp: number;
   restaurant: { name: string; slug: string; logo_url: string | null; lat: number | null; lng: number | null; address: string | null; city: string | null } | null;
-  rider: { name: string; phone: string; vehicle_type: string } | null;
+  rider: { name: string; phone: string; vehicle_type: string; rating?: number | null; ratings_count?: number } | null;
   order_items: { id: string; item_name: string; quantity: number; line_total: number }[];
   has_review: boolean;
+  delivery_pin?: string | null;
+  arrived_at_restaurant_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
+  rider_review?: { rating: number } | null;
 };
+
+function timeLabel(ts?: string | null) {
+  if (!ts) return null;
+  return new Date(ts).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
+}
 
 const VEHICLE_EMOJI: Record<string, string> = {
   motorcycle: '🏍️',
@@ -44,6 +54,28 @@ export default function OrderLookup({ reference }: { reference: string }) {
   const [autoTried, setAutoTried] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [ratingRider, setRatingRider] = useState(false);
+
+  // تقييم الطيار بعد التسليم — نجوم بضغطة واحدة
+  async function rateRider(stars: number) {
+    if (!order || ratingRider) return;
+    setRatingRider(true);
+    try {
+      const supa = getSupabaseClient();
+      const { error } = await supa.rpc('rate_rider', {
+        p_reference: order.reference,
+        p_customer_phone: order.customer_phone,
+        p_rating: stars,
+      });
+      if (error) throw error;
+      setOrder({ ...order, rider_review: { rating: stars } });
+      toast.success('شكرًا على تقييمك للطيار! ⭐');
+    } catch {
+      toast.error('حصل خطأ، حاول تاني');
+    } finally {
+      setRatingRider(false);
+    }
+  }
 
   async function cancelOrder() {
     if (!order) return;
@@ -165,6 +197,17 @@ export default function OrderLookup({ reference }: { reference: string }) {
         <EnableOrderNotifications reference={order.reference} customerPhone={order.customer_phone} />
       )}
 
+      {/* كود التسليم — العميل يقوله للطيار عشان يقفل الطلب */}
+      {order.delivery_pin && order.status !== 'cancelled' && order.status !== 'delivered' && (
+        <div className="bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-xl p-4 mb-6 text-center">
+          <p className="text-[11px] font-bold text-white/80 mb-1">🔐 كود التسليم</p>
+          <p className="text-3xl font-black tracking-[0.5em] pl-[0.5em]" dir="ltr">{order.delivery_pin}</p>
+          <p className="text-[11px] text-white/80 mt-1.5">
+            قول الكود ده للطيار لما يسلّمك الطلب — من غيره مش هيقدر يقفل الطلب
+          </p>
+        </div>
+      )}
+
       {/* بيانات الطيار لما يتعيّن */}
       {order.rider && order.status !== 'cancelled' && order.status !== 'delivered' && (
         <div className="bg-white rounded-xl border-2 border-brand-red/20 p-4 mb-6 flex items-center justify-between gap-3">
@@ -174,7 +217,12 @@ export default function OrderLookup({ reference }: { reference: string }) {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold text-brand-ink/50">الطيار بتاعك</p>
-              <p className="font-extrabold text-brand-ink text-sm truncate">{order.rider.name}</p>
+              <p className="font-extrabold text-brand-ink text-sm truncate">
+                {order.rider.name}
+                {order.rider.rating != null && order.rider.ratings_count ? (
+                  <span className="text-brand-orange text-xs font-bold"> ⭐ {Number(order.rider.rating).toFixed(1)}</span>
+                ) : null}
+              </p>
             </div>
           </div>
           <a
@@ -183,6 +231,33 @@ export default function OrderLookup({ reference }: { reference: string }) {
           >
             📞 اتصل بيه
           </a>
+        </div>
+      )}
+
+      {/* خط سير التوصيل بتوقيتاته */}
+      {order.rider && order.status !== 'cancelled' && (
+        <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+          <h2 className="font-bold text-brand-ink mb-2.5 text-sm">🛵 خط سير التوصيل</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className={order.arrived_at_restaurant_at ? 'text-brand-ink font-bold' : 'text-brand-ink/40'}>
+                {order.arrived_at_restaurant_at ? '✅' : '⚪'} الطيار وصل المطعم
+              </span>
+              <span className="text-xs text-brand-ink/50">{timeLabel(order.arrived_at_restaurant_at)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={order.picked_up_at ? 'text-brand-ink font-bold' : 'text-brand-ink/40'}>
+                {order.picked_up_at ? '✅' : '⚪'} استلم طلبك وطلع في الطريق
+              </span>
+              <span className="text-xs text-brand-ink/50">{timeLabel(order.picked_up_at)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={order.delivered_at ? 'text-brand-ink font-bold' : 'text-brand-ink/40'}>
+                {order.delivered_at ? '✅' : '⚪'} الطلب اتسلّم
+              </span>
+              <span className="text-xs text-brand-ink/50">{timeLabel(order.delivered_at)}</span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -260,6 +335,34 @@ export default function OrderLookup({ reference }: { reference: string }) {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* تقييم الطيار بعد التسليم */}
+      {order.status === 'delivered' && order.rider && (
+        <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 text-center">
+          {order.rider_review ? (
+            <p className="text-sm font-bold text-brand-ink">
+              قيّمت الطيار {order.rider.name} <span className="text-brand-orange">⭐ {order.rider_review.rating}</span> — شكرًا!
+            </p>
+          ) : (
+            <>
+              <p className="text-sm font-bold text-brand-ink mb-2">قيّم الطيار {order.rider.name} 🛵</p>
+              <div className="flex justify-center gap-1.5" dir="ltr">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => rateRider(s)}
+                    disabled={ratingRider}
+                    className="text-2xl grayscale hover:grayscale-0 transition-all disabled:opacity-50"
+                    aria-label={`${s} نجوم`}
+                  >
+                    ⭐
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

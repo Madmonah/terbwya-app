@@ -13,6 +13,8 @@ type Rider = {
   status: string;
   is_online: boolean;
   created_at: string;
+  rating: number | null;
+  ratings_count: number;
 };
 
 export default function RidersTab({ restaurantId }: { restaurantId: string }) {
@@ -27,10 +29,10 @@ export default function RidersTab({ restaurantId }: { restaurantId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data } = await supa
         .from('riders')
-        .select('id, name, phone, email, status, is_online, created_at')
+        .select('id, name, phone, email, status, is_online, created_at, rating, ratings_count')
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
       setRiders((data as Rider[]) || []);
@@ -50,7 +52,7 @@ export default function RidersTab({ restaurantId }: { restaurantId: string }) {
     }
     setSaving(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { data: { session } } = await supa.auth.getSession();
       if (!session) throw new Error('no_session');
 
@@ -156,7 +158,12 @@ export default function RidersTab({ restaurantId }: { restaurantId: string }) {
           {riders.map((r) => (
             <div key={r.id} className="flex items-center justify-between p-3">
               <div>
-                <div className="font-bold text-brand-ink text-sm">{r.name}</div>
+                <div className="font-bold text-brand-ink text-sm">
+                  {r.name}
+                  {r.rating != null && r.ratings_count > 0 && (
+                    <span className="text-brand-orange text-xs font-bold"> ⭐ {Number(r.rating).toFixed(1)} ({r.ratings_count})</span>
+                  )}
+                </div>
                 <div className="text-xs text-brand-ink/50" dir="ltr">{r.phone} · {r.email}</div>
               </div>
               <div className="flex items-center gap-2">

@@ -104,7 +104,7 @@ export default function JoinWizard() {
   useEffect(() => {
     (async () => {
       try {
-        const supa = getSupabaseAuthClient();
+        const supa = getSupabaseAuthClient('owner');
         const { data: { session } } = await supa.auth.getSession();
         if (!session?.user) {
           router.replace('/owner/signup');
@@ -203,7 +203,7 @@ export default function JoinWizard() {
     if (step === 2 && ownerId) {
       setCreatingDraft(true);
       try {
-        const supa = getSupabaseAuthClient();
+        const supa = getSupabaseAuthClient('owner');
         const fields = {
           name: name.trim(),
           description: description.trim() || null,
@@ -255,7 +255,7 @@ export default function JoinWizard() {
     if (!ownerId || !restaurantId) return;
     setSubmitting(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
 
       // تحديث بيانات المسودة النهائية (لو رجع وعدّل حاجة)
       const { data: restaurant, error: restError } = await supa

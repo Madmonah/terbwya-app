@@ -29,7 +29,7 @@ export default function EnableNotifications({ restaurantId }: { restaurantId: st
         toast.error('لازم توافق على الإشعارات من المتصفح');
         return;
       }
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const { error } = await supa.from('push_subscriptions').upsert(
         {
           kind: 'owner',

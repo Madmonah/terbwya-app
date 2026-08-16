@@ -34,7 +34,7 @@ export default function ImageUpload({
     }
     setUploading(true);
     try {
-      const supa = getSupabaseAuthClient();
+      const supa = getSupabaseAuthClient('owner');
       const ext = file.name.split('.').pop() || 'jpg';
       const path = `${restaurantId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supa.storage.from('restaurant-photos').upload(path, file, {
