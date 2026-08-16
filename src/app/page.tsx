@@ -3,7 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HeroSearch from './HeroSearch';
 import { getSupabaseClient } from '@/lib/supabase';
-import { Restaurant, CuisineCategory } from '@/lib/types';
+import { Restaurant, CuisineCategory, activeOffer, timeLeftLabel } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,23 @@ async function getFeaturedRestaurants(): Promise<Restaurant[]> {
   }
 }
 
+async function getActiveOfferRestaurants(): Promise<Restaurant[]> {
+  try {
+    const supa = getSupabaseClient();
+    const { data } = await supa
+      .from('restaurants')
+      .select('id,slug,name,city,cover_photo_url,rating,reviews_count,avg_delivery_minutes,is_open,status,featured,offers:restaurant_offers!inner(id,discount_percent,starts_at,ends_at)')
+      .eq('status', 'published')
+      .limit(20);
+    return ((data as unknown as Restaurant[]) || [])
+      .filter((r) => activeOffer(r.offers) !== null)
+      .sort((a, b) => Number(activeOffer(b.offers)!.discount_percent) - Number(activeOffer(a.offers)!.discount_percent))
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
 async function getCategories(): Promise<CuisineCategory[]> {
   try {
     const supa = getSupabaseClient();
@@ -37,9 +54,10 @@ async function getCategories(): Promise<CuisineCategory[]> {
 }
 
 export default async function HomePage() {
-  const [restaurants, categories] = await Promise.all([
+  const [restaurants, categories, offerRestaurants] = await Promise.all([
     getFeaturedRestaurants(),
     getCategories(),
+    getActiveOfferRestaurants(),
   ]);
 
   return (
@@ -176,6 +194,51 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
+
+        {/* عروض النهارده — بتظهر بس لو فيه عروض نشطة فعلاً */}
+        {offerRestaurants.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 py-12">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl md:text-2xl font-extrabold text-brand-ink">🔥 عروض النهارده</h2>
+              <Link href="/offers" className="text-brand-red font-bold text-sm hover:underline no-underline">
+                شوف كل العروض ←
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {offerRestaurants.map((r) => {
+                const offer = activeOffer(r.offers)!;
+                return (
+                  <Link
+                    key={r.id}
+                    href={`/restaurants/${r.slug}`}
+                    className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline"
+                  >
+                    <div className="relative aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
+                      {r.cover_photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.cover_photo_url}
+                          alt={r.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="text-4xl">🍽️</span>
+                      )}
+                      <span className="absolute top-2 right-2 bg-gradient-to-br from-violet-600 to-violet-800 text-white text-[11px] font-black px-2.5 py-1 rounded-full shadow">
+                        خصم {Number(offer.discount_percent)}%
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <div className="font-bold text-brand-ink text-sm leading-snug line-clamp-1">{r.name}</div>
+                      <div className="text-[11px] text-brand-ink/50 mt-1">⏳ {timeLeftLabel(offer.ends_at)}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Categories */}
         {categories.length > 0 && (
