@@ -32,9 +32,17 @@ type ActiveOrder = AvailableOrder & {
   restaurant: AvailableOrder['restaurant'] & { owner_phone: string | null };
 };
 
+type HistoryEntry = {
+  reference: string;
+  delivery_fee_egp: number;
+  delivered_at: string | null;
+  restaurant_name: string;
+};
+
 type DashboardData = {
   rider: { id: string; name: string; status: string; is_online: boolean; city: string | null; is_restaurant_rider: boolean };
   active_orders: ActiveOrder[];
+  history: HistoryEntry[];
   earnings: { today_egp: number; total_egp: number; delivered_count: number };
 };
 
@@ -198,7 +206,7 @@ export default function RiderDashboardPage() {
 
   if (!data) return null;
 
-  const { rider, active_orders, earnings } = data;
+  const { rider, active_orders, history, earnings } = data;
 
   // حساب لسه قيد المراجعة أو موقوف
   if (rider.status !== 'active') {
@@ -442,6 +450,31 @@ export default function RiderDashboardPage() {
             </div>
           )}
         </section>
+
+        {/* سجل التوصيلات */}
+        {(history || []).length > 0 && (
+          <section>
+            <h2 className="font-black text-brand-ink mb-2.5 flex items-center gap-1.5">
+              <PackageCheck className="w-5 h-5 text-green-600" /> آخر توصيلاتك
+            </h2>
+            <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              {history.map((h, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-brand-ink truncate">{h.restaurant_name}</p>
+                    <p className="text-[11px] text-brand-ink/40">
+                      #{h.reference}
+                      {h.delivered_at && ` · ${new Date(h.delivered_at).toLocaleString('ar-EG', { day: 'numeric', month: 'numeric', hour: 'numeric', minute: '2-digit' })}`}
+                    </p>
+                  </div>
+                  <span className="text-sm font-black text-green-600 shrink-0">
+                    +{Number(h.delivery_fee_egp).toLocaleString('ar-EG')} ج
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

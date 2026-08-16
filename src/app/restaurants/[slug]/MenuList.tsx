@@ -59,6 +59,7 @@ function MenuItemRow({
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(
     item.sizes && item.sizes.length > 0 ? item.sizes[0].id : null
   );
+  const [quantity, setQuantity] = useState(1);
 
   const price =
     selectedSizeId && item.sizes
@@ -77,13 +78,14 @@ function MenuItemRow({
       restaurantName,
       name: item.name_ar,
       price,
-      quantity: 1,
+      quantity,
     });
     if (!result.ok && result.reason === 'DIFFERENT_RESTAURANT') {
       toast.error('السلة فيها أوردر من مطعم تاني. لازم تفضي السلة الأول.');
       return;
     }
-    toast.success(`اتضاف ${item.name_ar} للسلة`);
+    toast.success(quantity === 1 ? `اتضاف ${item.name_ar} للسلة` : `اتضاف ${quantity} × ${item.name_ar} للسلة`);
+    setQuantity(1);
   }
 
   return (
@@ -120,13 +122,32 @@ function MenuItemRow({
         )}
         <div className="font-extrabold text-brand-orange text-sm mt-1">{price} ج.م</div>
       </div>
-      <button
-        onClick={handleAdd}
-        disabled={!isOpen}
-        className="bg-brand-red text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand-red-dark transition-colors flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        إضافة
-      </button>
+      <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={!isOpen}
+            className="w-6 h-6 rounded-full bg-brand-cream text-brand-ink font-bold text-sm disabled:opacity-40"
+          >
+            −
+          </button>
+          <span className="w-5 text-center font-bold text-sm">{quantity}</span>
+          <button
+            onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+            disabled={!isOpen}
+            className="w-6 h-6 rounded-full bg-brand-cream text-brand-ink font-bold text-sm disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={!isOpen}
+          className="bg-brand-red text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand-red-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          إضافة
+        </button>
+      </div>
     </div>
   );
 }

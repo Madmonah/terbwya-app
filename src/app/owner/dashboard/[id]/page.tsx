@@ -5,16 +5,17 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
-  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3, Bike,
+  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3, Bike, Star,
 } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import MenuTab from './MenuTab';
 import SettingsTab from './SettingsTab';
 import AnalyticsTab from './AnalyticsTab';
 import RidersTab from './RidersTab';
+import ReviewsTab from './ReviewsTab';
 import EnableNotifications from './EnableNotifications';
 
-type Tab = 'orders' | 'menu' | 'riders' | 'analytics' | 'settings';
+type Tab = 'orders' | 'menu' | 'riders' | 'reviews' | 'analytics' | 'settings';
 
 // صوت تنبيه "طلب جديد" — Web Audio مباشرة من غير ملف صوت
 function playNewOrderSound() {
@@ -255,6 +256,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
           <TabButton active={tab === 'riders'} onClick={() => setTab('riders')} icon={<Bike size={16} />} label="الطيارين" />
+          <TabButton active={tab === 'reviews'} onClick={() => setTab('reviews')} icon={<Star size={16} />} label="التقييمات" />
           <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 size={16} />} label="التحليلات" />
           <TabButton active={tab === 'settings'} onClick={() => setTab('settings')} icon={<Settings size={16} />} label="الإعدادات" />
         </div>
@@ -274,6 +276,8 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         )}
 
         {tab === 'riders' && <RidersTab restaurantId={restaurantId} />}
+
+        {tab === 'reviews' && <ReviewsTab restaurantId={restaurantId} />}
 
         {tab === 'analytics' && <AnalyticsTab restaurantId={restaurantId} />}
 
