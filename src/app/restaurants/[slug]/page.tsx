@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSupabaseClient } from '@/lib/supabase';
-import { Restaurant, MenuItem } from '@/lib/types';
+import { Restaurant, MenuItem, activeDiscount } from '@/lib/types';
 import MenuList from './MenuList';
 import FavoriteButton from './FavoriteButton';
 import ReviewsSection from './ReviewsSection';
@@ -14,7 +14,7 @@ async function getRestaurant(slug: string): Promise<Restaurant | null> {
     const supa = getSupabaseClient();
     const { data } = await supa
       .from('restaurants')
-      .select('id,slug,name,description,city,district,cover_photo_url,logo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,cuisine_category:cuisine_categories(slug,name_ar,icon)')
+      .select('id,slug,name,description,city,district,cover_photo_url,logo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,discount_percent,discount_ends_at,cuisine_category:cuisine_categories(slug,name_ar,icon)')
       .eq('slug', slug)
       .eq('status', 'published')
       .single();
@@ -59,6 +59,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
   if (!restaurant) notFound();
 
   const [menu, reviews] = await Promise.all([getMenu(restaurant.id), getReviews(restaurant.id)]);
+  const discount = activeDiscount(restaurant);
 
   return (
     <>
@@ -79,6 +80,11 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">مفتوح</span>
                 ) : (
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">مقفول دلوقتي</span>
+                )}
+                {discount > 0 && (
+                  <span className="text-xs font-black px-2.5 py-1 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 text-white">
+                    🏷️ خصم {discount}%
+                  </span>
                 )}
               </div>
               <FavoriteButton restaurantId={restaurant.id} />
@@ -105,7 +111,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                 المنيو مش متاح دلوقتي.
               </div>
             ) : (
-              <MenuList items={menu} restaurantId={restaurant.id} restaurantName={restaurant.name} isOpen={restaurant.is_open} />
+              <MenuList items={menu} restaurantId={restaurant.id} restaurantName={restaurant.name} isOpen={restaurant.is_open} discountPercent={discount} />
             )}
           </div>
 

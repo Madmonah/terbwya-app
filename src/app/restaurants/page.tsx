@@ -11,7 +11,7 @@ async function getRestaurants(): Promise<Restaurant[]> {
     const supa = getSupabaseClient();
     const { data } = await supa
       .from('restaurants')
-      .select('id,slug,name,description,city,district,cover_photo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,lat,lng,cuisine_category_id,cuisine_category:cuisine_categories(slug,name_ar,icon)')
+      .select('id,slug,name,description,city,district,cover_photo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,lat,lng,discount_percent,discount_ends_at,cuisine_category_id,cuisine_category:cuisine_categories(slug,name_ar,icon)')
       .eq('status', 'published')
       .order('featured', { ascending: false });
     return (data as unknown as Restaurant[]) || [];

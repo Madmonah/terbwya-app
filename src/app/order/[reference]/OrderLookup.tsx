@@ -18,6 +18,8 @@ type OrderData = {
   district: string | null;
   payment_method: string;
   subtotal_egp: number;
+  discount_percent: number;
+  discount_egp: number;
   delivery_fee_egp: number;
   total_egp: number;
   restaurant: { name: string; slug: string; logo_url: string | null; lat: number | null; lng: number | null; address: string | null; city: string | null } | null;
@@ -206,6 +208,12 @@ export default function OrderLookup({ reference }: { reference: string }) {
             </div>
           ))}
         </div>
+        {Number(order.discount_egp) > 0 && (
+          <div className="flex justify-between text-green-700 text-xs font-bold mt-2 pt-2 border-t border-gray-50">
+            <span>🏷️ خصم المطعم ({order.discount_percent}%)</span>
+            <span>−{order.discount_egp} ج.م</span>
+          </div>
+        )}
         <div className="flex justify-between text-brand-ink/60 text-xs mt-2 pt-2 border-t border-gray-50">
           <span>رسوم التوصيل</span>
           <span>{order.delivery_fee_egp > 0 ? `${order.delivery_fee_egp} ج.م` : 'مجانية'}</span>

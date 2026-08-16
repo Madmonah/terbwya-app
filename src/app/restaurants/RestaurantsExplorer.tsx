@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin } from 'lucide-react';
-import { Restaurant, CuisineCategory } from '@/lib/types';
+import { Restaurant, CuisineCategory, activeDiscount } from '@/lib/types';
 
 type SortOption = 'featured' | 'nearest' | 'rating' | 'delivery_time' | 'price_low';
 
@@ -247,12 +247,17 @@ export default function RestaurantsExplorer({
               href={`/restaurants/${r.slug}`}
               className="block bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all no-underline"
             >
-              <div className="aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
+              <div className="relative aspect-[4/3] bg-brand-cream flex items-center justify-center overflow-hidden">
                 {r.cover_photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={r.cover_photo_url} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <span className="text-4xl">🍽️</span>
+                )}
+                {activeDiscount(r) > 0 && (
+                  <span className="absolute top-2 right-2 text-[11px] font-black px-2 py-1 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 text-white shadow">
+                    🏷️ خصم {activeDiscount(r)}%
+                  </span>
                 )}
               </div>
               <div className="p-3">

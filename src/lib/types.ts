@@ -28,7 +28,17 @@ export type Restaurant = {
   featured: boolean;
   lat?: number | null;
   lng?: number | null;
+  discount_percent?: number;
+  discount_ends_at?: string | null;
 };
+
+// هل خصم المطعم نشط دلوقتي؟
+export function activeDiscount(r: { discount_percent?: number; discount_ends_at?: string | null }): number {
+  const d = Number(r.discount_percent || 0);
+  if (d <= 0) return 0;
+  if (r.discount_ends_at && new Date(r.discount_ends_at) < new Date()) return 0;
+  return d;
+}
 
 export type MenuItemSize = {
   id: string;

@@ -17,6 +17,7 @@ type OrderRow = {
   id: string;
   status: string;
   total_egp: number;
+  commission_egp: number;
   created_at: string;
   order_items: { item_name: string; quantity: number }[] | null;
 };
@@ -41,7 +42,7 @@ export default function AnalyticsTab({ restaurantId }: { restaurantId: string })
         since.setDate(since.getDate() - 30);
         const { data } = await supa
           .from('orders')
-          .select('id, status, total_egp, created_at, order_items(item_name, quantity)')
+          .select('id, status, total_egp, commission_egp, created_at, order_items(item_name, quantity)')
           .eq('restaurant_id', restaurantId)
           .gte('created_at', since.toISOString())
           .order('created_at', { ascending: true });
@@ -110,10 +111,13 @@ export default function AnalyticsTab({ restaurantId }: { restaurantId: string })
     orders.filter((o) => o.status === 'delivered').length > 0
       ? totalRevenue / orders.filter((o) => o.status === 'delivered').length
       : 0;
+  const totalCommission = orders
+    .filter((o) => o.status === 'delivered')
+    .reduce((s, o) => s + Number(o.commission_egp || 0), 0);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-[10px] font-bold tracking-wider uppercase text-brand-ink/50 mb-1">إيراد آخر 30 يوم</p>
           <p className="text-xl font-black text-brand-ink">{totalRevenue.toLocaleString('ar-EG')} ج</p>
@@ -125,6 +129,10 @@ export default function AnalyticsTab({ restaurantId }: { restaurantId: string })
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-[10px] font-bold tracking-wider uppercase text-brand-ink/50 mb-1">متوسط قيمة الطلب</p>
           <p className="text-xl font-black text-brand-ink">{Math.round(avgOrder).toLocaleString('ar-EG')} ج</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <p className="text-[10px] font-bold tracking-wider uppercase text-brand-ink/50 mb-1">مستحقات ترباوية (عمولة)</p>
+          <p className="text-xl font-black text-brand-red">{totalCommission.toLocaleString('ar-EG')} ج</p>
         </div>
       </div>
 

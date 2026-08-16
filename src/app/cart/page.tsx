@@ -15,6 +15,8 @@ type RestaurantLiveInfo = {
   status: string;
   delivery_fee_egp: number | null;
   min_order_egp: number | null;
+  discount_percent: number | null;
+  discount_ends_at: string | null;
 };
 
 export default function CartPage() {
@@ -72,7 +74,7 @@ export default function CartPage() {
         const supa = getSupabaseClient();
         const { data } = await supa
           .from('restaurants')
-          .select('is_open, status, delivery_fee_egp, min_order_egp')
+          .select('is_open, status, delivery_fee_egp, min_order_egp, discount_percent, discount_ends_at')
           .eq('id', cart[0].restaurantId)
           .maybeSingle();
         setRestaurantInfo(data as RestaurantLiveInfo | null);
@@ -112,6 +114,12 @@ export default function CartPage() {
   const grandTotal = total + deliveryFee;
   const belowMinimum = minOrder > 0 && total < minOrder;
   const restaurantClosed = restaurantInfo ? (!restaurantInfo.is_open || restaurantInfo.status !== 'published') : false;
+  const discountActive =
+    restaurantInfo &&
+    Number(restaurantInfo.discount_percent || 0) > 0 &&
+    (!restaurantInfo.discount_ends_at || new Date(restaurantInfo.discount_ends_at) > new Date())
+      ? Number(restaurantInfo.discount_percent)
+      : 0;
 
   async function handleSubmit() {
     if (!phone || cart.length === 0) {
@@ -227,6 +235,12 @@ export default function CartPage() {
             )}
 
             <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6 space-y-2">
+              {discountActive > 0 && (
+                <div className="flex items-center justify-between text-sm font-bold text-green-700">
+                  <span>🏷️ خصم المطعم {discountActive}%</span>
+                  <span>مطبّق على الأسعار</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm text-brand-ink/70">
                 <span>المجموع الفرعي</span>
                 <span>{total} ج.م</span>

@@ -14,6 +14,8 @@ type Restaurant = {
   featured: boolean;
   rating: number | null;
   reviews_count: number;
+  commission_percent: number;
+  discount_percent: number;
   created_at: string;
   owner: { id: string; business_name: string; phone: string | null; email: string | null } | null;
   cuisine_category: { name_ar: string } | null;
@@ -69,6 +71,30 @@ export default function AdminRestaurantsPage() {
       if (!res.ok) throw new Error(data.error);
       setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
       toast.success('اتحدّثت حالة المطعم');
+    } catch (e: any) {
+      toast.error(e.message || 'تعذّر التحديث');
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  async function saveCommission(id: string, value: string) {
+    const commission = Number(value);
+    if (isNaN(commission) || commission < 0 || commission > 50) {
+      toast.error('نسبة العمولة لازم تكون بين 0 و50%');
+      return;
+    }
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/admin/restaurants/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commission_percent: commission }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, commission_percent: commission } : r)));
+      toast.success(`عمولة ترباوية بقت ${commission}% على المطعم ده`);
     } catch (e: any) {
       toast.error(e.message || 'تعذّر التحديث');
     } finally {
@@ -144,6 +170,29 @@ export default function AdminRestaurantsPage() {
                   صاحب المطعم: {r.owner?.business_name || '—'} {r.owner?.phone ? `· ${r.owner.phone}` : ''}
                 </p>
                 <p className="text-xs text-brand-ink/40 mt-1">/{r.slug}</p>
+                {Number(r.discount_percent) > 0 && (
+                  <p className="text-xs font-bold text-green-700 mt-1">🏷️ عامل خصم {r.discount_percent}% للعملاء</p>
+                )}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <label className="text-xs font-bold text-brand-ink/60">عمولة ترباوية:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    defaultValue={r.commission_percent ?? 0}
+                    disabled={updatingId === r.id}
+                    onBlur={(e) => {
+                      if (Number(e.target.value) !== Number(r.commission_percent ?? 0)) {
+                        saveCommission(r.id, e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    }}
+                    className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center"
+                  />
+                  <span className="text-xs text-brand-ink/40">% من صافي كل طلب</span>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2 items-end">

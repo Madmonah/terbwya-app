@@ -10,11 +10,13 @@ export default function MenuList({
   restaurantId,
   restaurantName,
   isOpen,
+  discountPercent = 0,
 }: {
   items: MenuItem[];
   restaurantId: string;
   restaurantName: string;
   isOpen: boolean;
+  discountPercent?: number;
 }) {
   const grouped = items.reduce<Record<string, MenuItem[]>>((acc, item) => {
     const key = item.category || 'أصناف';
@@ -36,6 +38,7 @@ export default function MenuList({
                 restaurantId={restaurantId}
                 restaurantName={restaurantName}
                 isOpen={isOpen}
+                discountPercent={discountPercent}
               />
             ))}
           </div>
@@ -50,21 +53,24 @@ function MenuItemRow({
   restaurantId,
   restaurantName,
   isOpen,
+  discountPercent,
 }: {
   item: MenuItem;
   restaurantId: string;
   restaurantName: string;
   isOpen: boolean;
+  discountPercent: number;
 }) {
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(
     item.sizes && item.sizes.length > 0 ? item.sizes[0].id : null
   );
   const [quantity, setQuantity] = useState(1);
 
-  const price =
+  const basePrice =
     selectedSizeId && item.sizes
       ? item.sizes.find((s) => s.id === selectedSizeId)?.price ?? item.price
       : item.price;
+  const price = discountPercent > 0 ? Math.round(basePrice * (100 - discountPercent)) / 100 : basePrice;
 
   function handleAdd() {
     if (!isOpen) {
@@ -120,7 +126,12 @@ function MenuItemRow({
             ))}
           </div>
         )}
-        <div className="font-extrabold text-brand-orange text-sm mt-1">{price} ج.م</div>
+        <div className="font-extrabold text-brand-orange text-sm mt-1">
+          {discountPercent > 0 && (
+            <span className="text-brand-ink/35 line-through font-semibold text-xs ml-1.5">{basePrice} ج.م</span>
+          )}
+          {price} ج.م
+        </div>
       </div>
       <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
         <div className="flex items-center gap-1.5">

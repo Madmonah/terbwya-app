@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Store, ClipboardList, Users, UserCircle, LogOut, Bell, Bike } from 'lucide-react';
+import { LayoutDashboard, Store, ClipboardList, Users, UserCircle, LogOut, Bell, Bike, Banknote } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin', label: 'الإحصائيات', icon: LayoutDashboard },
   { href: '/admin/restaurants', label: 'المطاعم', icon: Store },
   { href: '/admin/orders', label: 'الطلبات', icon: ClipboardList },
   { href: '/admin/riders', label: 'الطيارين', icon: Bike },
+  { href: '/admin/settlements', label: 'الحسابات', icon: Banknote },
   { href: '/admin/owners', label: 'أصحاب المطاعم', icon: UserCircle },
   { href: '/admin/customers', label: 'العملاء', icon: Users },
   { href: '/admin/notifications', label: 'الإشعارات', icon: Bell },

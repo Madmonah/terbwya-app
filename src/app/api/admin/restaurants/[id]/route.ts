@@ -26,6 +26,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (typeof body.is_open === 'boolean') {
       update.is_open = body.is_open;
     }
+    if (body.commission_percent !== undefined) {
+      const commission = Number(body.commission_percent);
+      if (isNaN(commission) || commission < 0 || commission > 50) {
+        return NextResponse.json({ error: 'نسبة العمولة لازم تكون بين 0 و50%' }, { status: 400 });
+      }
+      update.commission_percent = commission;
+    }
 
     if (Object.keys(update).length === 0) {
       return NextResponse.json({ error: 'مفيش حاجة للتحديث' }, { status: 400 });
@@ -36,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .from('restaurants')
       .update(update)
       .eq('id', params.id)
-      .select('id,status,featured,is_open')
+      .select('id,status,featured,is_open,commission_percent')
       .single();
 
     if (error) throw error;
