@@ -35,26 +35,10 @@ export default function AccountOrdersPage() {
           return;
         }
 
-        const { data: customer } = await supa
-          .from('customers')
-          .select('id')
-          .eq('auth_user_id', session.user.id)
-          .maybeSingle();
-
-        if (!customer) {
-          setOrders([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: ordersData } = await supa
-          .from('orders')
-          .select('*, restaurant:restaurants(name, slug, cover_photo_url), order_items(*), reviews(id, rating)')
-          .eq('customer_id', customer.id)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        setOrders(ordersData || []);
+        // بتجيب طلبات الحساب + أي طلب اتعمل بنفس رقم موبايله (حتى لو كضيف)
+        const { data: ordersData, error } = await supa.rpc('get_my_orders');
+        if (error) throw error;
+        setOrders((ordersData as any[]) || []);
       } catch (e) {
         console.error('[account/orders] load error:', e);
       } finally {
@@ -172,9 +156,27 @@ export default function AccountOrdersPage() {
                         <Star size={12} fill="currentColor" /> {o.reviews[0].rating}
                       </span>
                     )}
+                    {o.status !== 'delivered' && o.status !== 'cancelled' && (
+                      <Link
+                        href={`/order/${o.reference}`}
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem(`terbwya_order_phone_${o.reference}`, o.customer_phone);
+                          } catch {}
+                        }}
+                        className="text-xs font-bold text-brand-red hover:underline"
+                      >
+                        تتبع الطلب
+                      </Link>
+                    )}
                     {o.status === 'delivered' && (!o.reviews || o.reviews.length === 0) && (
                       <Link
                         href={`/order/${o.reference}`}
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem(`terbwya_order_phone_${o.reference}`, o.customer_phone);
+                          } catch {}
+                        }}
                         className="text-xs font-bold text-brand-orange hover:underline"
                       >
                         قيّم الطلب

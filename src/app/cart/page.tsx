@@ -141,11 +141,38 @@ export default function CartPage() {
     }
     setSubmitting(true);
     try {
+      // لو مسجل دخول ومفيش صف عميل — نعمله تلقائيًا عشان الطلب يظهر في "طلباتي"
+      let cid = customerId;
+      try {
+        const supaAuth = getSupabaseAuthClient();
+        const { data: { session } } = await supaAuth.auth.getSession();
+        if (session?.user && !cid) {
+          const cleanPhone = phone.replace(/\D/g, '');
+          const { data: created } = await supaAuth
+            .from('customers')
+            .insert({
+              auth_user_id: session.user.id,
+              name: name || null,
+              phone: cleanPhone,
+              whatsapp_number: cleanPhone,
+              email: session.user.email,
+            })
+            .select('id')
+            .single();
+          if (created) {
+            cid = created.id;
+            setCustomerId(created.id);
+          }
+        }
+      } catch {
+        // فشل إنشاء صف العميل ميمنعش الطلب — هيتعمل كضيف
+      }
+
       const supa = getSupabaseClient();
       const restaurantId = cart[0].restaurantId;
       const { data, error } = await supa.rpc('create_order', {
         p_restaurant_id: restaurantId,
-        p_customer_id: customerId,
+        p_customer_id: cid,
         p_customer_name: name || null,
         p_customer_phone: phone,
         p_delivery_address: address || null,
