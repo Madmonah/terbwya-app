@@ -208,6 +208,7 @@ export default function Header() {
             )}
             <Link href="/about" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">عن ترباوية</Link>
             <Link href="/join" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">انضم كمطعم</Link>
+            <Link href="/rider/signup" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">انضم كطيار 🛵</Link>
             <Link href="/owner/login" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white no-underline py-2">دخول أصحاب المطاعم</Link>
           </nav>
         </div>

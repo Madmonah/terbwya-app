@@ -63,6 +63,11 @@ export default function JoinWizard() {
   const [restLocation, setRestLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
 
+  // التوصيل — عشان المطعم مينشرش بتوصيل مجاني من غير ما ياخد باله
+  const [deliveryFee, setDeliveryFee] = useState('');
+  const [minOrder, setMinOrder] = useState('');
+  const [avgMinutes, setAvgMinutes] = useState('');
+
   // المطعم بيتعمل كمسودة بعد خطوة الموقع — عشان رفع الصور يشتغل في خطوة المنيو
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [creatingDraft, setCreatingDraft] = useState(false);
@@ -208,6 +213,9 @@ export default function JoinWizard() {
           address: address.trim(),
           lat: restLocation?.lat ?? null,
           lng: restLocation?.lng ?? null,
+          delivery_fee_egp: Number(deliveryFee) || 0,
+          min_order_egp: Number(minOrder) || 0,
+          avg_delivery_minutes: avgMinutes ? Number(avgMinutes) : null,
         };
         if (restaurantId) {
           // رجع وعدّل البيانات؟ نحدّث المسودة الموجودة
@@ -262,6 +270,9 @@ export default function JoinWizard() {
           cover_photo_url: coverPhotoUrl || null,
           lat: restLocation?.lat ?? null,
           lng: restLocation?.lng ?? null,
+          delivery_fee_egp: Number(deliveryFee) || 0,
+          min_order_egp: Number(minOrder) || 0,
+          avg_delivery_minutes: avgMinutes ? Number(avgMinutes) : null,
         })
         .eq('id', restaurantId)
         .select('id, slug')
@@ -469,6 +480,46 @@ export default function JoinWizard() {
               )}
               <p className="text-[11px] text-brand-ink/40">
                 الموقع بيخلي مطعمك يظهر في "الأقرب ليك" والطيارين يوصلولك من غير لف.
+              </p>
+
+              <h3 className="font-bold text-brand-ink text-sm pt-2">التوصيل</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[11px] text-brand-ink/50 mb-1">رسوم التوصيل (ج.م)</label>
+                  <input
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(e.target.value)}
+                    type="number"
+                    min="0"
+                    placeholder="20"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-brand-ink/50 mb-1">أقل طلب (ج.م)</label>
+                  <input
+                    value={minOrder}
+                    onChange={(e) => setMinOrder(e.target.value)}
+                    type="number"
+                    min="0"
+                    placeholder="50"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-brand-ink/50 mb-1">مدة التوصيل (دقيقة)</label>
+                  <input
+                    value={avgMinutes}
+                    onChange={(e) => setAvgMinutes(e.target.value)}
+                    type="number"
+                    min="0"
+                    placeholder="40"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-brand-ink/40">
+                سيب رسوم التوصيل صفر لو التوصيل مجاني — ودي أرباح الطيار من كل طلب.
               </p>
             </div>
           )}

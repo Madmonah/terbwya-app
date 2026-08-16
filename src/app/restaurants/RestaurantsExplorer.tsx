@@ -259,6 +259,14 @@ export default function RestaurantsExplorer({
                     🏷️ خصم {activeDiscount(r)}%
                   </span>
                 )}
+                {/* العميل يعرف إن المطعم مقفول قبل ما يدخل ويتفاجئ */}
+                {!r.is_open && (
+                  <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                    <span className="text-white text-xs font-black bg-black/50 px-3 py-1.5 rounded-full">
+                      مقفول دلوقتي
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="p-3">
                 <div className="font-bold text-brand-ink text-sm leading-snug line-clamp-1">{r.name}</div>

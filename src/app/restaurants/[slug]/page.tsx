@@ -66,10 +66,22 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
     <>
       <Header />
       <main>
-        <div className="relative h-48 md:h-64 bg-brand-amber/30">
-          {restaurant.cover_photo_url && (
+        <div className="relative h-48 md:h-64 bg-gradient-to-br from-violet-800 via-violet-600 to-violet-400 overflow-hidden">
+          {restaurant.cover_photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={restaurant.cover_photo_url} alt={restaurant.name} className="w-full h-full object-cover" />
+          ) : (
+            <>
+              {/* غلاف افتراضي شيك بدل المربع الفاضي */}
+              <div className="pointer-events-none absolute -top-10 -left-10 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
+              <div className="pointer-events-none absolute bottom-0 right-10 w-56 h-56 rounded-full bg-black/10 blur-3xl" />
+              <div className="absolute inset-0 flex items-center justify-center text-white/90">
+                <div className="text-center">
+                  <div className="text-5xl mb-2">{restaurant.cuisine_category?.icon || '🍽️'}</div>
+                  <div className="font-black text-xl">{restaurant.name}</div>
+                </div>
+              </div>
+            </>
           )}
         </div>
         <div className="max-w-4xl mx-auto px-4 -mt-10 relative">

@@ -278,7 +278,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
           <StatCard label="إيراد الطلبات المسلّمة" value={`${totalRevenue.toLocaleString()} ج`} />
         </section>
 
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-gray-200 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0">
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
           <TabButton active={tab === 'offers'} onClick={() => setTab('offers')} icon={<Tag size={16} />} label="العروض" />
@@ -335,7 +335,7 @@ function TabButton({ active, onClick, icon, label }: any) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-4 py-2.5 font-bold text-sm border-b-2 transition-colors ${
+      className={`flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-bold text-sm border-b-2 transition-colors whitespace-nowrap shrink-0 ${
         active ? 'border-brand-red text-brand-red' : 'border-transparent text-brand-ink/50 hover:text-brand-ink'
       }`}
     >
