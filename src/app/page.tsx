@@ -223,7 +223,9 @@ export default async function HomePage() {
                           loading="lazy"
                         />
                       ) : (
-                        <span className="text-4xl">🍽️</span>
+                        <div className="w-full h-full bg-gradient-to-br from-violet-700 via-violet-500 to-violet-300 flex items-center justify-center">
+                    <span className="text-4xl drop-shadow">{(r as any).cuisine_category?.icon || '🍽️'}</span>
+                  </div>
                       )}
                       <span className="absolute top-2 right-2 bg-gradient-to-br from-violet-600 to-violet-800 text-white text-[11px] font-black px-2.5 py-1 rounded-full shadow">
                         خصم {Number(offer.discount_percent)}%
@@ -302,7 +304,9 @@ export default async function HomePage() {
                         loading="lazy"
                       />
                     ) : (
-                      <span className="text-4xl">🍽️</span>
+                      <div className="w-full h-full bg-gradient-to-br from-violet-700 via-violet-500 to-violet-300 flex items-center justify-center">
+                    <span className="text-4xl drop-shadow">{(r as any).cuisine_category?.icon || '🍽️'}</span>
+                  </div>
                     )}
                     {r.featured && (
                       <span className="absolute top-2 left-2 bg-brand-red text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow-sm">

@@ -234,6 +234,16 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             <h1 className="text-xl md:text-2xl font-black">{restaurant.name}</h1>
             <p className="text-xs text-white/80 mt-1">
               الحالة: {restaurant.status === 'published' ? '✅ منشور' : restaurant.status}
+              {restaurant.status === 'published' && restaurant.slug && (
+                <a
+                  href={`/restaurants/${restaurant.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-white underline font-bold mr-2"
+                >
+                  شوف صفحة مطعمك ↗
+                </a>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -345,12 +355,52 @@ function TabButton({ active, onClick, icon, label }: any) {
 }
 
 function OrdersTab({ orders, onUpdateStatus }: { orders: any[]; onUpdateStatus: (id: string, status: string) => void }) {
+  const [filter, setFilter] = useState<string>('active');
+
   if (orders.length === 0) {
     return <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10 text-center text-brand-ink/50">لسه مفيش طلبات</div>;
   }
+
+  const ACTIVE_STATUSES = ['pending', 'confirmed', 'preparing', 'out_for_delivery'];
+  const filtered =
+    filter === 'all'
+      ? orders
+      : filter === 'active'
+      ? orders.filter((o) => ACTIVE_STATUSES.includes(o.status))
+      : orders.filter((o) => o.status === filter);
+
+  const pendingCount = orders.filter((o) => o.status === 'pending').length;
+
   return (
     <div className="space-y-3">
-      {orders.map((o) => (
+      {/* فلترة سريعة — عشان صاحب المطعم يلاقي المحتاج تصرف فورًا */}
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {[
+          { key: 'active', label: '⚡ الشغالة دلوقتي' },
+          { key: 'pending', label: pendingCount > 0 ? `قيد الانتظار (${pendingCount})` : 'قيد الانتظار' },
+          { key: 'delivered', label: 'اتسلّمت' },
+          { key: 'cancelled', label: 'ملغية' },
+          { key: 'all', label: 'الكل' },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 ${
+              filter === f.key ? 'bg-brand-red text-white' : 'bg-white border border-gray-200 text-brand-ink/60'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="bg-white rounded-xl border border-dashed border-gray-200 p-8 text-center text-brand-ink/50 text-sm">
+          مفيش طلبات في القسم ده
+        </div>
+      )}
+
+      {filtered.map((o) => (
         <div key={o.id} className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <div>
@@ -365,8 +415,21 @@ function OrdersTab({ orders, onUpdateStatus }: { orders: any[]; onUpdateStatus: 
               {ORDER_STATUS_LABELS[o.status] || o.status}
             </span>
           </div>
-          <div className="text-sm text-brand-ink/70 mb-2">
-            {o.customer_name || 'عميل'} · {o.customer_phone} · {o.delivery_address}
+          <div className="text-sm text-brand-ink/70 mb-2 flex items-center gap-2 flex-wrap">
+            <span>{o.customer_name || 'عميل'} · {o.customer_phone} · {o.delivery_address}</span>
+            <a href={`tel:${o.customer_phone}`} className="text-xs font-bold text-brand-red no-underline border border-brand-red/30 rounded-lg px-2 py-0.5">
+              📞 اتصل
+            </a>
+            {o.customer_lat != null && o.customer_lng != null && (
+              <a
+                href={`https://maps.google.com/?q=${o.customer_lat},${o.customer_lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-brand-red no-underline border border-brand-red/30 rounded-lg px-2 py-0.5"
+              >
+                📍 مكانه على الخريطة
+              </a>
+            )}
           </div>
           {o.rider && (
             <div className="text-xs font-bold text-brand-red mb-2">

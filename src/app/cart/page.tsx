@@ -13,6 +13,7 @@ import { CartItem } from '@/lib/types';
 import { Offer, activeDiscount } from '@/lib/types';
 
 type RestaurantLiveInfo = {
+  slug: string;
   is_open: boolean;
   status: string;
   delivery_fee_egp: number | null;
@@ -75,7 +76,7 @@ export default function CartPage() {
         const supa = getSupabaseClient();
         const { data } = await supa
           .from('restaurants')
-          .select('is_open, status, delivery_fee_egp, min_order_egp, offers:restaurant_offers(id,discount_percent,starts_at,ends_at)')
+          .select('slug, is_open, status, delivery_fee_egp, min_order_egp, offers:restaurant_offers(id,discount_percent,starts_at,ends_at)')
           .eq('id', cart[0].restaurantId)
           .maybeSingle();
         setRestaurantInfo(data as RestaurantLiveInfo | null);
@@ -223,6 +224,15 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+
+            {restaurantInfo?.slug && (
+              <Link
+                href={`/restaurants/${restaurantInfo.slug}`}
+                className="block text-center text-brand-red font-bold text-sm mb-4 hover:underline no-underline"
+              >
+                ➕ ضيف حاجات تانية من {cart[0]?.restaurantName || 'المطعم'}
+              </Link>
+            )}
 
             {belowMinimum && (
               <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-center text-sm font-bold mb-4">

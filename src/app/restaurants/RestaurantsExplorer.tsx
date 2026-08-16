@@ -252,7 +252,9 @@ export default function RestaurantsExplorer({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={r.cover_photo_url} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
-                  <span className="text-4xl">🍽️</span>
+                  <div className="w-full h-full bg-gradient-to-br from-violet-700 via-violet-500 to-violet-300 flex items-center justify-center">
+                    <span className="text-4xl drop-shadow">{(r as any).cuisine_category?.icon || '🍽️'}</span>
+                  </div>
                 )}
                 {activeDiscount(r) > 0 && (
                   <span className="absolute top-2 right-2 text-[11px] font-black px-2 py-1 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 text-white shadow">

@@ -71,7 +71,9 @@ export default async function OffersPage() {
                           loading="lazy"
                         />
                       ) : (
-                        <span className="text-4xl">🍽️</span>
+                        <div className="w-full h-full bg-gradient-to-br from-violet-700 via-violet-500 to-violet-300 flex items-center justify-center">
+                    <span className="text-4xl drop-shadow">{(r as any).cuisine_category?.icon || '🍽️'}</span>
+                  </div>
                       )}
                       <span className="absolute top-3 right-3 bg-gradient-to-br from-violet-600 to-violet-800 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-sm">
                         🏷️ خصم {Number(activeOffer(r.offers)!.discount_percent)}%
