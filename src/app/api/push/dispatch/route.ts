@@ -19,14 +19,14 @@ const STATUS_MESSAGES: Record<string, { title: string; body: string }> = {
 export async function POST(req: NextRequest) {
   try {
     const { order_id, event } = await req.json();
-    if (!order_id || !event || !['new_order', 'status_change'].includes(event)) {
+    if (!order_id || !event || !['new_order', 'status_change', 'rider_available_order'].includes(event)) {
       return NextResponse.json({ error: 'bad_request' }, { status: 400 });
     }
 
     const supa = getSupabaseAdminClient();
     const { data: order } = await supa
       .from('orders')
-      .select('id, reference, status, total_egp, restaurant_id, created_at, restaurant:restaurants(name)')
+      .select('id, reference, status, total_egp, delivery_fee_egp, rider_id, restaurant_id, created_at, restaurant:restaurants(name, city)')
       .eq('id', order_id)
       .maybeSingle();
 
@@ -54,6 +54,48 @@ export async function POST(req: NextRequest) {
         body: `طلب #${order.reference} بقيمة ${Number(order.total_egp).toLocaleString('ar-EG')} ج.م — افتح الداشبورد وأكّده`,
         url: `/owner/dashboard/${order.restaurant_id}`,
         tag: `new-order-${order.id}`,
+      });
+    } else if (event === 'rider_available_order') {
+      // طلب اتأكد ولسه من غير طيار → إشعار للطيارين المؤهلين:
+      // طيارين المطعم نفسه + أسطول المنصة المتاح في نفس المدينة
+      if (order.rider_id) {
+        return NextResponse.json({ skipped: 'already_assigned' });
+      }
+      if (!['confirmed', 'preparing'].includes(order.status)) {
+        return NextResponse.json({ skipped: 'not_available_status' });
+      }
+
+      const restaurantCity = (order.restaurant as any)?.city || null;
+      const { data: eligibleRiders } = await supa
+        .from('riders')
+        .select('id, restaurant_id, city')
+        .eq('status', 'active')
+        .eq('is_online', true);
+
+      const riderIds = (eligibleRiders || [])
+        .filter(
+          (r: any) =>
+            r.restaurant_id === order.restaurant_id ||
+            (r.restaurant_id === null && (r.city === null || r.city === restaurantCity))
+        )
+        .map((r: any) => r.id);
+
+      if (riderIds.length === 0) {
+        return NextResponse.json({ sent: 0, note: 'no_eligible_riders' });
+      }
+
+      const { data: subs } = await supa
+        .from('push_subscriptions')
+        .select('id, endpoint, p256dh, auth')
+        .eq('kind', 'rider')
+        .in('rider_id', riderIds);
+
+      const restaurantName = (order.restaurant as any)?.name;
+      sent = await sendPushToSubscriptions((subs || []) as PushRow[], {
+        title: '🛵 طلب جديد متاح للتوصيل!',
+        body: `من ${restaurantName || 'مطعم'} — أرباحك ${Number(order.delivery_fee_egp).toLocaleString('ar-EG')} ج.م. اقبله قبل غيرك!`,
+        url: '/rider/dashboard',
+        tag: `rider-order-${order.id}`,
       });
     } else {
       // status_change: إشعار للعميل المشترك على الطلب ده بحالته الحالية من الداتابيز

@@ -24,9 +24,34 @@ export default function CartPage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
+  const [notes, setNotes] = useState('');
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantLiveInfo | null>(null);
+
+  // تحديد الموقع بالـ GPS — إجباري عشان الطيار يوصلك صح
+  function captureLocation() {
+    if (!('geolocation' in navigator)) {
+      toast.error('المتصفح مش بيدعم تحديد الموقع');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        toast.success('اتحدد موقعك 📍');
+      },
+      () => {
+        setLocating(false);
+        toast.error('محتاجين إذن الموقع عشان الطيار يعرف يوصلك — فعّله من إعدادات المتصفح وحاول تاني');
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
 
   useEffect(() => {
     setCart(getCart());
@@ -93,6 +118,10 @@ export default function CartPage() {
       toast.error('محتاجين رقم موبايلك على الأقل عشان نأكد الطلب');
       return;
     }
+    if (!location) {
+      toast.error('حدد موقعك الأول (زر 📍) عشان الطيار يعرف يوصلك');
+      return;
+    }
     if (restaurantClosed) {
       toast.error('المطعم مقفول دلوقتي، جرّب تاني بعدين');
       return;
@@ -112,13 +141,15 @@ export default function CartPage() {
         p_customer_phone: phone,
         p_delivery_address: address || null,
         p_city: city || null,
-        p_district: null,
-        p_notes: null,
+        p_district: district || null,
+        p_notes: notes || null,
         p_items: cart.map((c) => ({
           menu_item_id: c.menuItemId,
           menu_size_id: c.menuSizeId,
           quantity: c.quantity,
         })),
+        p_customer_lat: location.lat,
+        p_customer_lng: location.lng,
       });
 
       if (error || !data) throw error;
@@ -140,6 +171,7 @@ export default function CartPage() {
         menu_size_unavailable: 'مقاس صنف في السلة بقى مش متاح، حاول تاني',
         empty_cart: 'السلة فاضية',
         invalid_phone: 'رقم الموبايل مش صحيح',
+        location_required: 'حدد موقعك الأول (زر 📍) عشان الطيار يعرف يوصلك',
       };
       toast.error(knownErrors[msg] || 'حصل خطأ في إرسال الطلب، حاول تاني');
     } finally {
@@ -224,26 +256,72 @@ export default function CartPage() {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                 required
               />
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="المدينة"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              />
+              <div className="flex gap-2">
+                <input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="المدينة"
+                  className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                />
+                <input
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  placeholder="الحي / المنطقة"
+                  className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="العنوان بالتفصيل"
+                placeholder="العنوان بالتفصيل (شارع، عمارة، دور، شقة)"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                 rows={2}
               />
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="ملاحظات للمطعم أو الطيار (اختياري) — مثلاً: من غير بصل، الجرس مبيشتغلش"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                rows={2}
+              />
+
+              {/* تحديد الموقع — إجباري */}
+              {location ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+                  <span className="text-sm font-bold text-green-700">📍 موقعك اتحدد — الطيار هيوصلك بالظبط</span>
+                  <button
+                    type="button"
+                    onClick={captureLocation}
+                    disabled={locating}
+                    className="text-xs font-bold text-green-700 underline"
+                  >
+                    تحديث
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={captureLocation}
+                  disabled={locating}
+                  className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-brand-red/40 text-brand-red font-bold py-2.5 rounded-lg text-sm disabled:opacity-50"
+                >
+                  📍 {locating ? 'جاري تحديد موقعك...' : 'حدد موقعي بالـ GPS (مطلوب للتوصيل)'}
+                </button>
+              )}
+
               <p className="text-xs text-brand-ink/50">الدفع كاش عند الاستلام حاليًا.</p>
               <button
                 onClick={handleSubmit}
-                disabled={submitting || restaurantClosed || belowMinimum}
+                disabled={submitting || restaurantClosed || belowMinimum || !location}
                 className="w-full bg-brand-red text-white font-extrabold py-3 rounded-xl hover:bg-brand-red-dark transition-colors disabled:opacity-50"
               >
-                {submitting ? 'جاري الإرسال...' : restaurantClosed ? 'المطعم مقفول' : 'تأكيد الطلب'}
+                {submitting
+                  ? 'جاري الإرسال...'
+                  : restaurantClosed
+                  ? 'المطعم مقفول'
+                  : !location
+                  ? 'حدد موقعك الأول 📍'
+                  : 'تأكيد الطلب'}
               </button>
             </div>
           </>

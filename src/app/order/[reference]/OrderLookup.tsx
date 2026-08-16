@@ -20,8 +20,15 @@ type OrderData = {
   delivery_fee_egp: number;
   total_egp: number;
   restaurant: { name: string; slug: string; logo_url: string | null; lat: number | null; lng: number | null; address: string | null; city: string | null } | null;
+  rider: { name: string; phone: string; vehicle_type: string } | null;
   order_items: { id: string; item_name: string; quantity: number; line_total: number }[];
   has_review: boolean;
+};
+
+const VEHICLE_EMOJI: Record<string, string> = {
+  motorcycle: '🏍️',
+  bicycle: '🚲',
+  car: '🚗',
 };
 
 // صفحة تتبع الطلب أصبحت محمية: لازم رقم موبايل العميل يتطابق مع اللي على
@@ -126,6 +133,27 @@ export default function OrderLookup({ reference }: { reference: string }) {
 
       {order.status !== 'cancelled' && order.status !== 'delivered' && (
         <EnableOrderNotifications reference={order.reference} customerPhone={order.customer_phone} />
+      )}
+
+      {/* بيانات الطيار لما يتعيّن */}
+      {order.rider && order.status !== 'cancelled' && order.status !== 'delivered' && (
+        <div className="bg-white rounded-xl border-2 border-brand-red/20 p-4 mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-violet-50 flex items-center justify-center text-xl shrink-0">
+              {VEHICLE_EMOJI[order.rider.vehicle_type] || '🛵'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-brand-ink/50">الطيار بتاعك</p>
+              <p className="font-extrabold text-brand-ink text-sm truncate">{order.rider.name}</p>
+            </div>
+          </div>
+          <a
+            href={`tel:${order.rider.phone}`}
+            className="bg-brand-red text-white text-xs font-bold px-4 py-2 rounded-xl no-underline shrink-0"
+          >
+            📞 اتصل بيه
+          </a>
+        </div>
       )}
 
       {order.status !== 'cancelled' && order.status !== 'delivered' && order.restaurant?.lat && order.restaurant?.lng && (

@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
-  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3,
+  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3, Bike,
 } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import MenuTab from './MenuTab';
 import SettingsTab from './SettingsTab';
 import AnalyticsTab from './AnalyticsTab';
+import RidersTab from './RidersTab';
 import EnableNotifications from './EnableNotifications';
 
-type Tab = 'orders' | 'menu' | 'analytics' | 'settings';
+type Tab = 'orders' | 'menu' | 'riders' | 'analytics' | 'settings';
 
 // صوت تنبيه "طلب جديد" — Web Audio مباشرة من غير ملف صوت
 function playNewOrderSound() {
@@ -87,7 +88,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
 
       const { data: ordersData } = await supa
         .from('orders')
-        .select('*, order_items(*)')
+        .select('*, order_items(*), rider:riders(name, phone)')
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -120,7 +121,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         const supa = getSupabaseAuthClient();
         const { data: fresh } = await supa
           .from('orders')
-          .select('*, order_items(*)')
+          .select('*, order_items(*), rider:riders(name, phone)')
           .eq('restaurant_id', restaurantId)
           .order('created_at', { ascending: false })
           .limit(100);
@@ -253,6 +254,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         <div className="flex gap-2 border-b border-gray-200">
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
+          <TabButton active={tab === 'riders'} onClick={() => setTab('riders')} icon={<Bike size={16} />} label="الطيارين" />
           <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 size={16} />} label="التحليلات" />
           <TabButton active={tab === 'settings'} onClick={() => setTab('settings')} icon={<Settings size={16} />} label="الإعدادات" />
         </div>
@@ -270,6 +272,8 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             onReload={load}
           />
         )}
+
+        {tab === 'riders' && <RidersTab restaurantId={restaurantId} />}
 
         {tab === 'analytics' && <AnalyticsTab restaurantId={restaurantId} />}
 
@@ -331,6 +335,14 @@ function OrdersTab({ orders, onUpdateStatus }: { orders: any[]; onUpdateStatus: 
           <div className="text-sm text-brand-ink/70 mb-2">
             {o.customer_name || 'عميل'} · {o.customer_phone} · {o.delivery_address}
           </div>
+          {o.rider && (
+            <div className="text-xs font-bold text-brand-red mb-2">
+              🛵 الطيار: {o.rider.name} · <span dir="ltr">{o.rider.phone}</span>
+            </div>
+          )}
+          {o.notes && (
+            <div className="text-xs text-brand-orange font-bold mb-2">📝 {o.notes}</div>
+          )}
           <div className="text-sm mb-3 space-y-0.5">
             {(o.order_items || []).map((it: any) => (
               <div key={it.id} className="flex justify-between text-brand-ink/80">

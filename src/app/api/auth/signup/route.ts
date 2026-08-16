@@ -10,10 +10,10 @@ export const dynamic = 'force-dynamic';
 // لو الإيميل موجود وكلمة السر صح، بنكمّل الصف الناقص وبنرجع نجاح عادي.
 export async function POST(req: NextRequest) {
   try {
-    const { role, businessName, name, phone, email, password } = await req.json();
+    const { role, businessName, name, phone, email, password, city, vehicleType } = await req.json();
 
     // ---- التحقق من المدخلات ----
-    if (!['owner', 'customer'].includes(role)) {
+    if (!['owner', 'customer', 'rider'].includes(role)) {
       return NextResponse.json({ error: 'bad_role' }, { status: 400 });
     }
     const cleanEmail = String(email || '').trim().toLowerCase();
@@ -97,6 +97,38 @@ export async function POST(req: NextRequest) {
         throw ownerError;
       }
       return NextResponse.json({ ok: true, ownerId: owner.id });
+    }
+
+    if (role === 'rider') {
+      const { data: existingRider } = await admin
+        .from('riders')
+        .select('id, status')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+
+      if (existingRider) {
+        return NextResponse.json({ ok: true, riderId: existingRider.id, riderStatus: existingRider.status, repaired: true });
+      }
+
+      const { data: rider, error: riderError } = await admin
+        .from('riders')
+        .insert({
+          auth_user_id: userId,
+          name: displayName,
+          phone: cleanPhone,
+          email: cleanEmail,
+          city: String(city || '').trim() || null,
+          vehicle_type: ['motorcycle', 'bicycle', 'car'].includes(vehicleType) ? vehicleType : 'motorcycle',
+          status: 'pending', // لازم موافقة الأدمن الأول
+        })
+        .select('id, status')
+        .single();
+
+      if (riderError) {
+        if (!createError) await admin.auth.admin.deleteUser(userId).catch(() => {});
+        throw riderError;
+      }
+      return NextResponse.json({ ok: true, riderId: rider.id, riderStatus: rider.status });
     }
 
     // role === 'customer'

@@ -2,17 +2,29 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X, MapPin } from 'lucide-react';
 import { Restaurant, CuisineCategory } from '@/lib/types';
 
-type SortOption = 'featured' | 'rating' | 'delivery_time' | 'price_low';
+type SortOption = 'featured' | 'nearest' | 'rating' | 'delivery_time' | 'price_low';
 
 const SORT_LABELS: Record<SortOption, string> = {
   featured: 'الأفضل',
+  nearest: 'الأقرب ليك',
   rating: 'الأعلى تقييمًا',
   delivery_time: 'الأسرع توصيلًا',
   price_low: 'الأقل سعرًا',
 };
+
+// مسافة تقريبية بالكيلومتر بين نقطتين (Haversine)
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export default function RestaurantsExplorer({
   restaurants,
@@ -31,6 +43,26 @@ export default function RestaurantsExplorer({
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [maxDeliveryFee, setMaxDeliveryFee] = useState<number | null>(null);
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  function useMyLocation() {
+    if (myLocation) {
+      setSort('nearest');
+      return;
+    }
+    if (!('geolocation' in navigator)) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSort('nearest');
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
 
   const filtered = useMemo(() => {
     let list = [...restaurants];
@@ -58,6 +90,15 @@ export default function RestaurantsExplorer({
     }
 
     switch (sort) {
+      case 'nearest':
+        if (myLocation) {
+          list.sort((a, b) => {
+            const da = a.lat != null && a.lng != null ? distanceKm(myLocation.lat, myLocation.lng, a.lat, a.lng) : 99999;
+            const db = b.lat != null && b.lng != null ? distanceKm(myLocation.lat, myLocation.lng, b.lat, b.lng) : 99999;
+            return da - db;
+          });
+        }
+        break;
       case 'rating':
         list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
@@ -72,7 +113,7 @@ export default function RestaurantsExplorer({
     }
 
     return list;
-  }, [restaurants, query, cuisineSlug, sort, minRating, maxDeliveryFee]);
+  }, [restaurants, query, cuisineSlug, sort, minRating, maxDeliveryFee, myLocation]);
 
   const activeFilterCount = (minRating > 0 ? 1 : 0) + (maxDeliveryFee !== null ? 1 : 0);
 
@@ -130,12 +171,13 @@ export default function RestaurantsExplorer({
           {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
             <button
               key={key}
-              onClick={() => setSort(key)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold ${
+              onClick={() => (key === 'nearest' ? useMyLocation() : setSort(key))}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
                 sort === key ? 'bg-brand-ink text-white' : 'bg-brand-cream text-brand-ink/60'
               }`}
             >
-              {SORT_LABELS[key]}
+              {key === 'nearest' && <MapPin size={12} />}
+              {key === 'nearest' && locating ? 'جاري تحديد موقعك...' : SORT_LABELS[key]}
             </button>
           ))}
         </div>
@@ -218,6 +260,11 @@ export default function RestaurantsExplorer({
                 <div className="flex items-center gap-2 mt-1 text-xs text-brand-ink/50">
                   {r.city && <span>{r.city}</span>}
                   {r.avg_delivery_minutes && <span>· {r.avg_delivery_minutes} د</span>}
+                  {myLocation && r.lat != null && r.lng != null && (
+                    <span className="text-brand-red font-bold">
+                      · {distanceKm(myLocation.lat, myLocation.lng, r.lat, r.lng).toFixed(1)} كم
+                    </span>
+                  )}
                 </div>
                 {r.rating != null && (
                   <div className="text-xs text-brand-orange font-bold mt-1">⭐ {r.rating.toFixed(1)} ({r.reviews_count})</div>

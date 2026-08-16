@@ -26,6 +26,8 @@ export type Restaurant = {
   is_open: boolean;
   status: string;
   featured: boolean;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 export type MenuItemSize = {

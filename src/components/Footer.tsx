@@ -21,6 +21,7 @@ export default function Footer() {
           <ul className="space-y-1">
             <li><a href="/restaurants" className="hover:text-white">تصفح المطاعم</a></li>
             <li><a href="/join" className="hover:text-white">سجّل مطعمك</a></li>
+            <li><a href="/rider/signup" className="hover:text-white">انضم كطيار 🛵</a></li>
             <li><a href="/about" className="hover:text-white">عن المنصة</a></li>
           </ul>
         </div>
