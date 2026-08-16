@@ -123,6 +123,10 @@ export default function CartPage() {
       toast.error('محتاجين رقم موبايلك على الأقل عشان نأكد الطلب');
       return;
     }
+    if (!/^01[0-9]{9}$/.test(phone.replace(/\D/g, ''))) {
+      toast.error('رقم الموبايل مش صحيح — لازم يبدأ بـ 01 ويبقى 11 رقم');
+      return;
+    }
     if (!location) {
       toast.error('حدد موقعك الأول (زر 📍) عشان الطيار يعرف يوصلك');
       return;

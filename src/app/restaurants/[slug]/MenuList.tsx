@@ -25,10 +25,29 @@ export default function MenuList({
     return acc;
   }, {});
 
+  const categories = Object.keys(grouped);
+
   return (
     <div className="space-y-8">
-      {Object.entries(grouped).map(([category, groupItems]) => (
-        <div key={category}>
+      {/* تنقل سريع بين أقسام المنيو — مفيد للمنيوهات الطويلة */}
+      {categories.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {categories.map((cat, i) => (
+            <button
+              key={cat}
+              onClick={() => {
+                document.getElementById(`menu-cat-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white border border-brand-amber/40 text-brand-ink/70 hover:border-brand-orange hover:text-brand-red transition-colors"
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {Object.entries(grouped).map(([category, groupItems], catIdx) => (
+        <div key={category} id={`menu-cat-${catIdx}`} className="scroll-mt-40">
           <h3 className="font-bold text-brand-red mb-3">{category}</h3>
           <div className="space-y-3">
             {groupItems.map((item) => (

@@ -6,6 +6,7 @@ import { Restaurant, MenuItem, activeDiscount, activeOffer, timeLeftLabel } from
 import MenuList from './MenuList';
 import FavoriteButton from './FavoriteButton';
 import ReviewsSection from './ReviewsSection';
+import StickyCartBar from './StickyCartBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,12 +148,13 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             )}
           </div>
 
-          <div className="mt-10 mb-16">
+          <div className="mt-10 mb-24">
             <h2 className="text-xl font-bold text-brand-ink mb-4">تقييمات العملاء</h2>
             <ReviewsSection reviews={reviews} />
           </div>
         </div>
       </main>
+      <StickyCartBar restaurantId={restaurant.id} />
       <Footer />
     </>
   );

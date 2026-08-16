@@ -264,7 +264,23 @@ export default function OrderLookup({ reference }: { reference: string }) {
         </div>
       )}
 
-      <Link href="/restaurants" className="block text-center bg-brand-red text-white font-extrabold py-3 rounded-xl no-underline">
+      {order.restaurant?.slug && ['delivered', 'cancelled'].includes(order.status) && (
+        <Link
+          href={`/restaurants/${order.restaurant.slug}`}
+          className="block text-center bg-brand-red text-white font-extrabold py-3 rounded-xl no-underline mb-3"
+        >
+          اطلب تاني من {order.restaurant.name} 🔁
+        </Link>
+      )}
+
+      <Link
+        href="/restaurants"
+        className={`block text-center font-extrabold py-3 rounded-xl no-underline ${
+          ['delivered', 'cancelled'].includes(order.status)
+            ? 'bg-white border border-gray-200 text-brand-ink'
+            : 'bg-brand-red text-white'
+        }`}
+      >
         اطلب من مطعم تاني
       </Link>
     </>
