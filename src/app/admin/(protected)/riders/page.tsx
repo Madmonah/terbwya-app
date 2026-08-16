@@ -16,6 +16,10 @@ type Rider = {
   restaurant: { name: string } | null;
   delivered_count: number;
   total_earnings: number;
+  platform_commission_total: number;
+  commission_per_order_egp: number;
+  rating: number | null;
+  ratings_count: number;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -41,6 +45,8 @@ export default function AdminRidersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [editingCommissionId, setEditingCommissionId] = useState<string | null>(null);
+  const [commissionInput, setCommissionInput] = useState('');
 
   async function load() {
     setLoading(true);
@@ -79,7 +85,33 @@ export default function AdminRidersPage() {
     }
   }
 
+  async function saveCommission(id: string) {
+    const value = Number(commissionInput);
+    if (!Number.isFinite(value) || value < 0 || value > 500) {
+      toast.error('العمولة لازم تكون رقم من 0 لـ 500 جنيه');
+      return;
+    }
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/admin/riders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commission_per_order_egp: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRiders((prev) => prev.map((r) => (r.id === id ? { ...r, commission_per_order_egp: value } : r)));
+      setEditingCommissionId(null);
+      toast.success('اتحدّثت عمولة المنصة — هتتطبق على التسليمات الجاية');
+    } catch (e: any) {
+      toast.error(e.message || 'تعذّر التحديث');
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   const filtered = filter === 'all' ? riders : riders.filter((r) => r.status === filter);
+  const fleetPlatformTotal = riders.reduce((s, r) => s + Number(r.platform_commission_total || 0), 0);
   const pendingCount = riders.filter((r) => r.status === 'pending').length;
 
   return (
@@ -89,6 +121,11 @@ export default function AdminRidersPage() {
           الطيارين ({riders.length})
           {pendingCount > 0 && (
             <span className="text-sm font-bold text-amber-600 mr-2">— {pendingCount} في انتظار الموافقة</span>
+          )}
+          {fleetPlatformTotal > 0 && (
+            <span className="text-sm font-bold text-green-600 mr-2">
+              — دخل المنصة من الدليفري: {fleetPlatformTotal.toLocaleString('ar-EG')} ج
+            </span>
           )}
         </h1>
         <div className="flex gap-2 flex-wrap">
@@ -135,8 +172,54 @@ export default function AdminRidersPage() {
                   {r.restaurant ? `طيار مطعم "${r.restaurant.name}"` : 'أسطول ترباوية'}
                 </p>
                 <p className="text-xs text-brand-ink/40 mt-1">
-                  وصّل {r.delivered_count} طلب · أرباحه {Number(r.total_earnings).toLocaleString('ar-EG')} ج
+                  وصّل {r.delivered_count} طلب · أرباحه الصافية {Number(r.total_earnings).toLocaleString('ar-EG')} ج
+                  {Number(r.platform_commission_total) > 0 && (
+                    <span className="text-green-600 font-bold"> · المنصة كسبت منه {Number(r.platform_commission_total).toLocaleString('ar-EG')} ج</span>
+                  )}
+                  {r.rating != null && r.ratings_count > 0 && ` · ⭐ ${Number(r.rating).toFixed(1)} (${r.ratings_count})`}
                 </p>
+
+                {/* عمولة المنصة — أسطول ترباوية بس */}
+                {!r.restaurant && (
+                  <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                    {editingCommissionId === r.id ? (
+                      <>
+                        <input
+                          value={commissionInput}
+                          onChange={(e) => setCommissionInput(e.target.value.replace(/[^\d.]/g, ''))}
+                          dir="ltr"
+                          inputMode="decimal"
+                          className="w-20 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center font-bold"
+                          autoFocus
+                        />
+                        <span className="text-xs text-brand-ink/50">ج/طلب</span>
+                        <button
+                          disabled={updatingId === r.id}
+                          onClick={() => saveCommission(r.id)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-red text-white disabled:opacity-50"
+                        >
+                          حفظ
+                        </button>
+                        <button
+                          onClick={() => setEditingCommissionId(null)}
+                          className="px-2 py-1 text-xs font-bold text-brand-ink/50"
+                        >
+                          إلغاء
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingCommissionId(r.id);
+                          setCommissionInput(String(r.commission_per_order_egp ?? 5));
+                        }}
+                        className="text-xs font-bold text-brand-ink/60 bg-violet-50 hover:bg-violet-100 px-2.5 py-1 rounded-lg"
+                      >
+                        💰 عمولة المنصة: {Number(r.commission_per_order_egp ?? 5).toLocaleString('ar-EG')} ج/طلب — عدّل
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-1.5 flex-wrap justify-end">

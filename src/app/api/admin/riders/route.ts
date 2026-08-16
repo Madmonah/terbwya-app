@@ -17,18 +17,20 @@ export async function GET() {
       .order('created_at', { ascending: false });
     if (error) throw error;
 
-    // إحصائيات التوصيل لكل طيار
+    // إحصائيات التوصيل لكل طيار (أرباح الطيار الصافية + عمولة المنصة منه)
     const { data: stats } = await supa
       .from('orders')
-      .select('rider_id, delivery_fee_egp')
+      .select('rider_id, delivery_fee_egp, rider_commission_egp')
       .eq('status', 'delivered')
       .not('rider_id', 'is', null);
 
-    const deliveredByRider = new Map<string, { count: number; earnings: number }>();
+    const deliveredByRider = new Map<string, { count: number; earnings: number; platform: number }>();
     for (const o of stats || []) {
-      const entry = deliveredByRider.get(o.rider_id) || { count: 0, earnings: 0 };
+      const entry = deliveredByRider.get(o.rider_id) || { count: 0, earnings: 0, platform: 0 };
+      const commission = Number(o.rider_commission_egp || 0);
       entry.count += 1;
-      entry.earnings += Number(o.delivery_fee_egp || 0);
+      entry.earnings += Math.max(Number(o.delivery_fee_egp || 0) - commission, 0);
+      entry.platform += commission;
       deliveredByRider.set(o.rider_id, entry);
     }
 
@@ -37,6 +39,7 @@ export async function GET() {
         ...r,
         delivered_count: deliveredByRider.get(r.id)?.count || 0,
         total_earnings: deliveredByRider.get(r.id)?.earnings || 0,
+        platform_commission_total: deliveredByRider.get(r.id)?.platform || 0,
       })),
     });
   } catch (e) {

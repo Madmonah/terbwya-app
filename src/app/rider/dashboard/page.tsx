@@ -24,6 +24,7 @@ type AvailableOrder = {
   items_count?: number;
   items_summary?: string | null;
   distance_km?: number | null;
+  platform_commission_egp?: number;
   restaurant: { name: string; address: string | null; city: string | null; lat: number | null; lng: number | null };
 };
 
@@ -33,6 +34,7 @@ type ActiveOrder = AvailableOrder & {
   customer_lat: number | null;
   customer_lng: number | null;
   notes: string | null;
+  net_earning_egp?: number;
   arrived_at_restaurant_at: string | null;
   picked_up_at: string | null;
   items: { item_name: string; quantity: number }[];
@@ -42,6 +44,8 @@ type ActiveOrder = AvailableOrder & {
 type HistoryEntry = {
   reference: string;
   delivery_fee_egp: number;
+  net_earning_egp?: number;
+  platform_commission_egp?: number;
   delivered_at: string | null;
   restaurant_name: string;
   my_rating?: number | null;
@@ -51,6 +55,7 @@ type DashboardData = {
   rider: {
     id: string; name: string; status: string; is_online: boolean; city: string | null;
     is_restaurant_rider: boolean; rating?: number | null; ratings_count?: number;
+    commission_per_order_egp?: number;
   };
   active_orders: ActiveOrder[];
   history: HistoryEntry[];
@@ -309,6 +314,13 @@ export default function RiderDashboardPage() {
           </div>
         </section>
 
+        {/* شفافية عمولة المنصة لطيارين الأسطول */}
+        {(rider.commission_per_order_egp || 0) > 0 && (
+          <p className="text-[11px] text-brand-ink/45 text-center -mt-2.5">
+            الأرباح المعروضة صافية — عمولة ترباوية {Number(rider.commission_per_order_egp).toLocaleString('ar-EG')} ج/طلب بتتخصم تلقائيًا من رسوم التوصيل
+          </p>
+        )}
+
         {/* تفعيل الإشعارات */}
         {pushSupported() && !pushEnabled && (
           <button
@@ -399,7 +411,8 @@ export default function RiderDashboardPage() {
                       <span className="font-black text-amber-800">{Number(o.total_egp).toLocaleString('ar-EG')} ج</span>
                     </div>
                     <p className="text-[11px] text-brand-ink/50 text-center">
-                      أرباحك من الطلب ده: <span className="font-bold text-green-600">{Number(o.delivery_fee_egp).toLocaleString('ar-EG')} ج</span> (رسوم التوصيل)
+                      أرباحك من الطلب ده: <span className="font-bold text-green-600">{Number(o.net_earning_egp ?? o.delivery_fee_egp).toLocaleString('ar-EG')} ج</span>
+                      {(rider.commission_per_order_egp || 0) > 0 && ' (صافي بعد عمولة المنصة)'}
                     </p>
 
                     {/* خط سير التوصيل */}
@@ -562,7 +575,7 @@ export default function RiderDashboardPage() {
                       <span className="text-[11px] font-bold text-brand-orange">⭐ {h.my_rating}</span>
                     )}
                     <span className="text-sm font-black text-green-600">
-                      +{Number(h.delivery_fee_egp).toLocaleString('ar-EG')} ج
+                      +{Number(h.net_earning_egp ?? h.delivery_fee_egp).toLocaleString('ar-EG')} ج
                     </span>
                   </div>
                 </div>
