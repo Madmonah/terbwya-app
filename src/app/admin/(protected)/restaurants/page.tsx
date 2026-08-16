@@ -15,8 +15,8 @@ type Restaurant = {
   rating: number | null;
   reviews_count: number;
   commission_percent: number;
-  discount_percent: number;
   created_at: string;
+  offers: { id: string; discount_percent: number; starts_at: string; ends_at: string }[] | null;
   owner: { id: string; business_name: string; phone: string | null; email: string | null } | null;
   cuisine_category: { name_ar: string } | null;
 };
@@ -170,9 +170,18 @@ export default function AdminRestaurantsPage() {
                   صاحب المطعم: {r.owner?.business_name || '—'} {r.owner?.phone ? `· ${r.owner.phone}` : ''}
                 </p>
                 <p className="text-xs text-brand-ink/40 mt-1">/{r.slug}</p>
-                {Number(r.discount_percent) > 0 && (
-                  <p className="text-xs font-bold text-green-700 mt-1">🏷️ عامل خصم {r.discount_percent}% للعملاء</p>
-                )}
+                {(() => {
+                  const now = new Date();
+                  const active = (r.offers || []).find(
+                    (o) => new Date(o.starts_at) <= now && new Date(o.ends_at) > now
+                  );
+                  return active ? (
+                    <p className="text-xs font-bold text-green-700 mt-1">
+                      🏷️ عرض نشط: خصم {Number(active.discount_percent)}% لحد{' '}
+                      {new Date(active.ends_at).toLocaleDateString('ar-EG')}
+                    </p>
+                  ) : null;
+                })()}
                 <div className="flex items-center gap-1.5 mt-2">
                   <label className="text-xs font-bold text-brand-ink/60">عمولة ترباوية:</label>
                   <input

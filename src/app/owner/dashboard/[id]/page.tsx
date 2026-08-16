@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
-  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3, Bike, Star,
+  Loader2, LogOut, Package, ShoppingBag, Settings, BarChart3, Bike, Star, Tag,
 } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import MenuTab from './MenuTab';
@@ -13,9 +13,10 @@ import SettingsTab from './SettingsTab';
 import AnalyticsTab from './AnalyticsTab';
 import RidersTab from './RidersTab';
 import ReviewsTab from './ReviewsTab';
+import OffersTab from './OffersTab';
 import EnableNotifications from './EnableNotifications';
 
-type Tab = 'orders' | 'menu' | 'riders' | 'reviews' | 'analytics' | 'settings';
+type Tab = 'orders' | 'menu' | 'offers' | 'riders' | 'reviews' | 'analytics' | 'settings';
 
 // صوت تنبيه "طلب جديد" — Web Audio مباشرة من غير ملف صوت
 function playNewOrderSound() {
@@ -255,6 +256,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
         <div className="flex gap-2 border-b border-gray-200">
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<ShoppingBag size={16} />} label="الطلبات" />
           <TabButton active={tab === 'menu'} onClick={() => setTab('menu')} icon={<Package size={16} />} label="المنيو" />
+          <TabButton active={tab === 'offers'} onClick={() => setTab('offers')} icon={<Tag size={16} />} label="العروض" />
           <TabButton active={tab === 'riders'} onClick={() => setTab('riders')} icon={<Bike size={16} />} label="الطيارين" />
           <TabButton active={tab === 'reviews'} onClick={() => setTab('reviews')} icon={<Star size={16} />} label="التقييمات" />
           <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 size={16} />} label="التحليلات" />
@@ -274,6 +276,8 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
             onReload={load}
           />
         )}
+
+        {tab === 'offers' && <OffersTab restaurantId={restaurantId} />}
 
         {tab === 'riders' && <RidersTab restaurantId={restaurantId} />}
 

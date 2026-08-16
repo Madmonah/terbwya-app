@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSupabaseClient } from '@/lib/supabase';
-import { Restaurant } from '@/lib/types';
+import { Restaurant, activeOffer, timeLeftLabel } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,17 +11,15 @@ async function getOfferRestaurants(): Promise<Restaurant[]> {
     const supa = getSupabaseClient();
     const { data } = await supa
       .from('restaurants')
-      .select('id,slug,name,description,city,district,cover_photo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured')
+      .select('id,slug,name,description,city,district,cover_photo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,offers:restaurant_offers!inner(id,discount_percent,starts_at,ends_at)')
       .eq('status', 'published')
-      .eq('featured', true)
       .order('rating', { ascending: false, nullsFirst: false });
-    return (data as Restaurant[]) || [];
+    // بس المطاعم اللي عندها عرض نشط فعلاً دلوقتي
+    return ((data as unknown as Restaurant[]) || []).filter((r) => activeOffer(r.offers) !== null);
   } catch {
     return [];
   }
 }
-
-const DISCOUNT_LABELS = ['خصم 20%', 'خصم 30%', 'توصيل مجاني', 'خصم 15%', 'اطلب واحد واحصل التاني مجانًا', 'خصم 25%'];
 
 export default async function OffersPage() {
   const restaurants = await getOfferRestaurants();
@@ -57,7 +55,7 @@ export default async function OffersPage() {
             <>
               <p className="text-brand-ink/50 text-sm mb-5">{restaurants.length} عرض متاح دلوقتي</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {restaurants.map((r, i) => (
+                {restaurants.map((r) => (
                   <Link
                     key={r.id}
                     href={`/restaurants/${r.slug}`}
@@ -76,10 +74,10 @@ export default async function OffersPage() {
                         <span className="text-4xl">🍽️</span>
                       )}
                       <span className="absolute top-3 right-3 bg-gradient-to-br from-violet-600 to-violet-800 text-white text-xs font-extrabold px-3 py-1.5 rounded-full shadow-sm">
-                        {DISCOUNT_LABELS[i % DISCOUNT_LABELS.length]}
+                        🏷️ خصم {Number(activeOffer(r.offers)!.discount_percent)}%
                       </span>
                       <span className="absolute bottom-3 left-3 bg-brand-ink/80 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm">
-                        ⏳ لفترة محدودة
+                        ⏳ {timeLeftLabel(activeOffer(r.offers)!.ends_at)}
                       </span>
                     </div>
                     <div className="p-4">

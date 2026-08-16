@@ -13,7 +13,7 @@ export async function GET() {
     const { data, error } = await supa
       .from('restaurants')
       .select(
-        'id,slug,name,city,district,status,is_open,featured,rating,reviews_count,commission_percent,discount_percent,created_at,owner:restaurant_owners(id,business_name,phone,email),cuisine_category:cuisine_categories(name_ar)'
+        'id,slug,name,city,district,status,is_open,featured,rating,reviews_count,commission_percent,created_at,offers:restaurant_offers(id,discount_percent,starts_at,ends_at),owner:restaurant_owners(id,business_name,phone,email),cuisine_category:cuisine_categories(name_ar)'
       )
       .order('created_at', { ascending: false });
 

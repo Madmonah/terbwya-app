@@ -10,13 +10,14 @@ import { getSupabaseClient, getSupabaseAuthClient } from '@/lib/supabase';
 import { getCart, updateQuantity, cartTotal, clearCart } from '@/lib/cart';
 import { CartItem } from '@/lib/types';
 
+import { Offer, activeDiscount } from '@/lib/types';
+
 type RestaurantLiveInfo = {
   is_open: boolean;
   status: string;
   delivery_fee_egp: number | null;
   min_order_egp: number | null;
-  discount_percent: number | null;
-  discount_ends_at: string | null;
+  offers: Offer[] | null;
 };
 
 export default function CartPage() {
@@ -74,7 +75,7 @@ export default function CartPage() {
         const supa = getSupabaseClient();
         const { data } = await supa
           .from('restaurants')
-          .select('is_open, status, delivery_fee_egp, min_order_egp, discount_percent, discount_ends_at')
+          .select('is_open, status, delivery_fee_egp, min_order_egp, offers:restaurant_offers(id,discount_percent,starts_at,ends_at)')
           .eq('id', cart[0].restaurantId)
           .maybeSingle();
         setRestaurantInfo(data as RestaurantLiveInfo | null);
@@ -114,12 +115,7 @@ export default function CartPage() {
   const grandTotal = total + deliveryFee;
   const belowMinimum = minOrder > 0 && total < minOrder;
   const restaurantClosed = restaurantInfo ? (!restaurantInfo.is_open || restaurantInfo.status !== 'published') : false;
-  const discountActive =
-    restaurantInfo &&
-    Number(restaurantInfo.discount_percent || 0) > 0 &&
-    (!restaurantInfo.discount_ends_at || new Date(restaurantInfo.discount_ends_at) > new Date())
-      ? Number(restaurantInfo.discount_percent)
-      : 0;
+  const discountActive = restaurantInfo ? activeDiscount({ offers: restaurantInfo.offers }) : 0;
 
   async function handleSubmit() {
     if (!phone || cart.length === 0) {

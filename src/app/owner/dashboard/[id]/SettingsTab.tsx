@@ -25,20 +25,11 @@ export default function SettingsTab({
   const [avgDeliveryMinutes, setAvgDeliveryMinutes] = useState(String(restaurant.avg_delivery_minutes ?? ''));
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(restaurant.cover_photo_url || '');
   const [logoUrl, setLogoUrl] = useState(restaurant.logo_url || '');
-  const [discountPercent, setDiscountPercent] = useState(String(restaurant.discount_percent ?? 0));
-  const [discountEndsAt, setDiscountEndsAt] = useState(
-    restaurant.discount_ends_at ? String(restaurant.discount_ends_at).slice(0, 10) : ''
-  );
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
     if (Number(deliveryFee) < 0 || Number(minOrder) < 0) {
       toast.error('القيم لازم تكون صفر أو أكبر');
-      return;
-    }
-    const discount = Number(discountPercent) || 0;
-    if (discount < 0 || discount > 90) {
-      toast.error('نسبة الخصم لازم تكون بين 0 و90%');
       return;
     }
     setSaving(true);
@@ -57,8 +48,6 @@ export default function SettingsTab({
           avg_delivery_minutes: avgDeliveryMinutes ? Number(avgDeliveryMinutes) : null,
           cover_photo_url: coverPhotoUrl || null,
           logo_url: logoUrl || null,
-          discount_percent: discount,
-          discount_ends_at: discount > 0 && discountEndsAt ? new Date(discountEndsAt + 'T23:59:59').toISOString() : null,
         })
         .eq('id', restaurantId);
       if (error) throw error;
@@ -176,39 +165,9 @@ export default function SettingsTab({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
-        <h3 className="font-bold text-brand-ink text-sm mb-1">🏷️ خصم المطعم</h3>
-        <p className="text-xs text-brand-ink/50">
-          حدد نسبة خصم على كل المنيو — بتظهر للعملاء كشارة على مطعمك وبتتطبق أوتوماتيك على كل طلب.
-          سيبها صفر لو مفيش خصم.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] text-brand-ink/50 mb-1">نسبة الخصم (%)</label>
-            <input
-              value={discountPercent}
-              onChange={(e) => setDiscountPercent(e.target.value)}
-              type="number"
-              min="0"
-              max="90"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] text-brand-ink/50 mb-1">ينتهي في (اختياري)</label>
-            <input
-              value={discountEndsAt}
-              onChange={(e) => setDiscountEndsAt(e.target.value)}
-              type="date"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
-        {Number(discountPercent) > 0 && (
-          <p className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            🏷️ خصم {discountPercent}% نشط{discountEndsAt ? ` لحد ${discountEndsAt}` : ' من غير تاريخ انتهاء'}
-          </p>
-        )}
+      <div className="bg-violet-50 border border-violet-100 rounded-xl p-3.5 text-xs text-brand-ink/70">
+        🏷️ <span className="font-bold text-brand-ink">الخصومات والعروض</span> بقى ليها تبويب خاص —
+        روح لتبويب "العروض" فوق عشان تجدول عروضك بتواريخ بداية ونهاية.
       </div>
 
       <button

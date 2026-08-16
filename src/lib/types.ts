@@ -28,16 +28,46 @@ export type Restaurant = {
   featured: boolean;
   lat?: number | null;
   lng?: number | null;
-  discount_percent?: number;
-  discount_ends_at?: string | null;
+  offers?: Offer[];
 };
 
-// هل خصم المطعم نشط دلوقتي؟
-export function activeDiscount(r: { discount_percent?: number; discount_ends_at?: string | null }): number {
-  const d = Number(r.discount_percent || 0);
-  if (d <= 0) return 0;
-  if (r.discount_ends_at && new Date(r.discount_ends_at) < new Date()) return 0;
-  return d;
+export type Offer = {
+  id: string;
+  discount_percent: number;
+  starts_at: string;
+  ends_at: string;
+};
+
+// العرض النشط دلوقتي من تايم لاين العروض (أو null)
+export function activeOffer(offers?: Offer[] | null): Offer | null {
+  if (!offers || offers.length === 0) return null;
+  const now = new Date();
+  const active = offers.filter(
+    (o) => new Date(o.starts_at) <= now && new Date(o.ends_at) > now
+  );
+  if (active.length === 0) return null;
+  return active.reduce((best, o) =>
+    Number(o.discount_percent) > Number(best.discount_percent) ? o : best
+  );
+}
+
+export function activeDiscount(r: { offers?: Offer[] | null }): number {
+  const offer = activeOffer(r.offers);
+  return offer ? Number(offer.discount_percent) : 0;
+}
+
+// "ينتهي خلال..." — صياغة عربية بسيطة للوقت المتبقي
+export function timeLeftLabel(endsAt: string): string {
+  const ms = new Date(endsAt).getTime() - Date.now();
+  if (ms <= 0) return 'انتهى';
+  const hours = Math.floor(ms / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days >= 2) return `ينتهي خلال ${days} أيام`;
+  if (days === 1) return 'ينتهي خلال يوم';
+  if (hours >= 2) return `ينتهي خلال ${hours} ساعات`;
+  if (hours === 1) return 'ينتهي خلال ساعة';
+  const minutes = Math.max(1, Math.floor(ms / 60000));
+  return `ينتهي خلال ${minutes} دقيقة`;
 }
 
 export type MenuItemSize = {
