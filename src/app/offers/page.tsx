@@ -6,6 +6,11 @@ import { Restaurant, activeOffer, timeLeftLabel } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: 'العروض والخصومات — ترباوية',
+  description: 'أقوى خصومات المطاعم في مصر لفترة محدودة — اطلب دلوقتي قبل ما العرض يخلص.',
+};
+
 async function getOfferRestaurants(): Promise<Restaurant[]> {
   try {
     const supa = getSupabaseClient();

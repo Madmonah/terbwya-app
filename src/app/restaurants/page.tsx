@@ -6,6 +6,11 @@ import RestaurantsExplorer from './RestaurantsExplorer';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: 'المطاعم — ترباوية',
+  description: 'اكتشف أحلى المطاعم القريبة منك واطلب بأقوى الخصومات — توصيل سريع ودفع عند الاستلام.',
+};
+
 async function getRestaurants(): Promise<Restaurant[]> {
   try {
     const supa = getSupabaseClient();

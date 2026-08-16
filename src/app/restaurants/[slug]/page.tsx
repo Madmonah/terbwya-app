@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -7,8 +8,38 @@ import MenuList from './MenuList';
 import FavoriteButton from './FavoriteButton';
 import ReviewsSection from './ReviewsSection';
 import StickyCartBar from './StickyCartBar';
+import ShareButton from './ShareButton';
 
 export const dynamic = 'force-dynamic';
+
+// ميتاداتا لكل مطعم — عشان معاينة اللينك على واتساب/فيسبوك تطلع باسمه وصورته
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const restaurant = await getRestaurant(params.slug);
+  if (!restaurant) {
+    return { title: 'مطعم غير موجود — ترباوية' };
+  }
+  const discount = activeDiscount(restaurant);
+  const title = `${restaurant.name}${discount > 0 ? ` — خصم ${discount}%` : ''} | ترباوية`;
+  const description =
+    restaurant.description ||
+    `اطلب من ${restaurant.name}${restaurant.city ? ` في ${restaurant.city}` : ''} على ترباوية — توصيل سريع ودفع عند الاستلام.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'ar_EG',
+      images: restaurant.cover_photo_url ? [{ url: restaurant.cover_photo_url }] : undefined,
+    },
+    twitter: {
+      card: restaurant.cover_photo_url ? 'summary_large_image' : 'summary',
+      title,
+      description,
+    },
+  };
+}
 
 async function getRestaurant(slug: string): Promise<Restaurant | null> {
   try {
@@ -101,7 +132,10 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                   </span>
                 )}
               </div>
-              <FavoriteButton restaurantId={restaurant.id} />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <ShareButton name={restaurant.name} />
+                <FavoriteButton restaurantId={restaurant.id} />
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-ink/60">
               {restaurant.city && <span>📍 {restaurant.city}{restaurant.district ? `، ${restaurant.district}` : ''}</span>}
