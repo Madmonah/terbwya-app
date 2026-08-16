@@ -92,6 +92,7 @@ export default function Header() {
           </Link>
           <Link href="/about" className="text-white/90 hover:text-white no-underline">عن ترباوية</Link>
           <Link href="/join" className="text-white/90 hover:text-white no-underline">انضم كمطعم</Link>
+          <Link href="/rider/signup" className="text-white/90 hover:text-white no-underline">انضم كطيار 🛵</Link>
           <Link href="/owner/login" className="text-white/90 hover:text-white no-underline">دخول أصحاب المطاعم</Link>
         </nav>
 

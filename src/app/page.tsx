@@ -340,24 +340,40 @@ export default async function HomePage() {
           )}
         </section>
 
-        {/* CTA for restaurant owners */}
+        {/* CTA: انضم لترباوية — مطعم أو طيار */}
         <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-violet-50/40 py-14 mt-6">
           <div className="pointer-events-none absolute -top-8 right-10 w-40 h-40 rounded-full bg-violet-200/15 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-10 w-52 h-52 rounded-full bg-violet-300/10 blur-3xl" />
-          <div className="relative max-w-3xl mx-auto px-4 text-center">
-            <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-4 py-1.5 text-xs font-bold text-brand-ink/70 mb-4">
-              🏪 لأصحاب المطاعم
-            </span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-brand-ink mb-3">عندك مطعم؟ انضم لترباوية</h2>
-            <p className="text-brand-ink/70 mb-7 max-w-xl mx-auto">
-              اعرض منيو مطعمك لآلاف العملاء، واستقبل طلبات مضمونة بسهولة وبدون عمولات مبالغ فيها.
-            </p>
-            <Link
-              href="/join"
-              className="inline-block bg-brand-red text-white font-extrabold px-8 py-3.5 rounded-xl hover:bg-brand-red-dark hover:shadow-lg hover:shadow-brand-red/20 hover:-translate-y-0.5 transition-all no-underline"
-            >
-              سجّل مطعمك مجانًا
-            </Link>
+          <div className="relative max-w-4xl mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-brand-ink mb-7 text-center">اشتغل مع ترباوية</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
+                <div className="text-4xl mb-3">🏪</div>
+                <h3 className="text-lg font-extrabold text-brand-ink mb-2">عندك مطعم؟</h3>
+                <p className="text-brand-ink/60 text-sm mb-5">
+                  اعرض منيوك لآلاف العملاء واستقبل طلبات مضمونة — التسجيل في دقايق.
+                </p>
+                <Link
+                  href="/join"
+                  className="inline-block bg-brand-red text-white font-extrabold px-7 py-3 rounded-xl hover:bg-brand-red-dark hover:shadow-lg transition-all no-underline"
+                >
+                  سجّل مطعمك مجانًا
+                </Link>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
+                <div className="text-4xl mb-3">🛵</div>
+                <h3 className="text-lg font-extrabold text-brand-ink mb-2">عايز تشتغل طيار؟</h3>
+                <p className="text-brand-ink/60 text-sm mb-5">
+                  وصّل طلبات في مدينتك واكسب رسوم التوصيل كاملة — أنت اللي بتختار طلباتك ووقتك.
+                </p>
+                <Link
+                  href="/rider/signup"
+                  className="inline-block bg-gradient-to-br from-violet-500 to-violet-700 text-white font-extrabold px-7 py-3 rounded-xl hover:shadow-lg transition-all no-underline"
+                >
+                  انضم كطيار
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>
