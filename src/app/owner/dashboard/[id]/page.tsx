@@ -97,7 +97,7 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
 
       const { data: menuData } = await supa
         .from('menu_items')
-        .select('*')
+        .select('*, sizes:menu_item_sizes(*)')
         .eq('restaurant_id', restaurantId)
         .order('display_order');
       setMenuItems(menuData || []);

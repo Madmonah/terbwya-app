@@ -16,6 +16,7 @@ type Order = {
   city: string | null;
   district: string | null;
   created_at: string;
+  rider: { id: string; name: string; phone: string } | null;
   restaurant: { id: string; name: string; slug: string } | null;
 };
 
@@ -47,21 +48,43 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [workingId, setWorkingId] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const res = await fetch('/api/admin/orders', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setOrders(data.orders || []);
+    } catch (e: any) {
+      toast.error(e.message || 'تعذّر تحميل الطلبات');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/admin/orders', { cache: 'no-store' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        setOrders(data.orders || []);
-      } catch (e: any) {
-        toast.error(e.message || 'تعذّر تحميل الطلبات');
-      } finally {
-        setLoading(false);
-      }
-    })();
+    load();
   }, []);
+
+  async function unassignRider(orderId: string) {
+    setWorkingId(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unassign_rider' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success('اتشال الطيار — الطلب رجع متاح للطيارين');
+      load();
+    } catch (e: any) {
+      toast.error(e.message || 'حصل خطأ');
+    } finally {
+      setWorkingId(null);
+    }
+  }
 
   const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter);
 
@@ -96,6 +119,7 @@ export default function AdminOrdersPage() {
               <th className="p-3 font-semibold">الكود</th>
               <th className="p-3 font-semibold">المطعم</th>
               <th className="p-3 font-semibold">العميل</th>
+              <th className="p-3 font-semibold">الطيار</th>
               <th className="p-3 font-semibold">الإجمالي</th>
               <th className="p-3 font-semibold">الدفع</th>
               <th className="p-3 font-semibold">الحالة</th>
@@ -112,6 +136,24 @@ export default function AdminOrdersPage() {
                   <div className="text-xs text-brand-ink/40" dir="ltr">
                     {o.customer_phone}
                   </div>
+                </td>
+                <td className="p-3">
+                  {o.rider ? (
+                    <div>
+                      <span className="text-xs font-bold">🛵 {o.rider.name}</span>
+                      {!['delivered', 'cancelled'].includes(o.status) && (
+                        <button
+                          onClick={() => unassignRider(o.id)}
+                          disabled={workingId === o.id}
+                          className="block text-[10px] text-red-500 font-bold hover:underline disabled:opacity-50"
+                        >
+                          شيل التعيين
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-brand-ink/30">—</span>
+                  )}
                 </td>
                 <td className="p-3 font-bold">{Number(o.total_egp).toLocaleString('ar-EG')} ج</td>
                 <td className="p-3 text-xs">{PAYMENT_LABELS[o.payment_method] || o.payment_method}</td>

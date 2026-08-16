@@ -6,15 +6,22 @@ import { Plus, Trash2, Check, X, Pencil } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import ImageUpload from './ImageUpload';
 
+type SizeForm = {
+  id?: string; // موجود = مقاس محفوظ قبل كده، مش موجود = جديد
+  name_ar: string;
+  price: string;
+};
+
 type MenuItemForm = {
   name_ar: string;
   price: string;
   category: string;
   description_ar: string;
   photo_url: string;
+  sizes: SizeForm[];
 };
 
-const EMPTY_FORM: MenuItemForm = { name_ar: '', price: '', category: '', description_ar: '', photo_url: '' };
+const EMPTY_FORM: MenuItemForm = { name_ar: '', price: '', category: '', description_ar: '', photo_url: '', sizes: [] };
 
 export default function MenuTab({
   restaurantId, menuItems, onToggle, onDelete, onReload,
@@ -28,24 +35,46 @@ export default function MenuTab({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MenuItemForm>(EMPTY_FORM);
+  const [originalSizeIds, setOriginalSizeIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   function startAdd() {
     setForm(EMPTY_FORM);
+    setOriginalSizeIds([]);
     setEditingId(null);
     setAdding(true);
   }
 
   function startEdit(item: any) {
+    const sizes: SizeForm[] = (item.sizes || [])
+      .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+      .map((s: any) => ({ id: s.id, name_ar: s.name_ar || '', price: String(s.price ?? '') }));
     setForm({
       name_ar: item.name_ar || '',
       price: String(item.price ?? ''),
       category: item.category || '',
       description_ar: item.description_ar || '',
       photo_url: item.photo_url || '',
+      sizes,
     });
+    setOriginalSizeIds(sizes.map((s) => s.id!).filter(Boolean));
     setEditingId(item.id);
     setAdding(true);
+  }
+
+  function addSize() {
+    setForm((f) => ({ ...f, sizes: [...f.sizes, { name_ar: '', price: '' }] }));
+  }
+
+  function updateSize(idx: number, field: 'name_ar' | 'price', value: string) {
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+    }));
+  }
+
+  function removeSize(idx: number) {
+    setForm((f) => ({ ...f, sizes: f.sizes.filter((_, i) => i !== idx) }));
   }
 
   function cancel() {
@@ -59,6 +88,14 @@ export default function MenuTab({
       toast.error('اسم الصنف والسعر مطلوبين');
       return;
     }
+    // تحقق من المقاسات: أي مقاس متكتب لازم يبقى له اسم وسعر
+    const cleanSizes = form.sizes.filter((s) => s.name_ar.trim() || s.price);
+    for (const s of cleanSizes) {
+      if (!s.name_ar.trim() || !(Number(s.price) > 0)) {
+        toast.error('كل مقاس لازم يكون له اسم وسعر صحيح');
+        return;
+      }
+    }
     setSaving(true);
     try {
       const supa = getSupabaseAuthClient();
@@ -69,15 +106,45 @@ export default function MenuTab({
         description_ar: form.description_ar.trim() || null,
         photo_url: form.photo_url || null,
       };
+
+      let itemId = editingId;
       if (editingId) {
         const { error } = await supa.from('menu_items').update(payload).eq('id', editingId);
         if (error) throw error;
-        toast.success('اتحدّث الصنف');
       } else {
-        const { error } = await supa.from('menu_items').insert({ restaurant_id: restaurantId, ...payload });
+        const { data: inserted, error } = await supa
+          .from('menu_items')
+          .insert({ restaurant_id: restaurantId, ...payload })
+          .select('id')
+          .single();
         if (error) throw error;
-        toast.success('اتضاف الصنف');
+        itemId = inserted.id;
       }
+
+      // مزامنة المقاسات: امسح المحذوف، حدّث الموجود، ضيف الجديد
+      const keptIds = cleanSizes.map((s) => s.id).filter(Boolean) as string[];
+      const toDelete = originalSizeIds.filter((id) => !keptIds.includes(id));
+      if (toDelete.length > 0) {
+        await supa.from('menu_item_sizes').delete().in('id', toDelete);
+      }
+      for (let i = 0; i < cleanSizes.length; i++) {
+        const s = cleanSizes[i];
+        if (s.id) {
+          await supa
+            .from('menu_item_sizes')
+            .update({ name_ar: s.name_ar.trim(), price: Number(s.price), display_order: i + 1 })
+            .eq('id', s.id);
+        } else {
+          await supa.from('menu_item_sizes').insert({
+            menu_item_id: itemId,
+            name_ar: s.name_ar.trim(),
+            price: Number(s.price),
+            display_order: i + 1,
+          });
+        }
+      }
+
+      toast.success(editingId ? 'اتحدّث الصنف' : 'اتضاف الصنف');
       cancel();
       onReload();
     } catch (e) {
@@ -125,7 +192,7 @@ export default function MenuTab({
               value={form.price}
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
               type="number"
-              placeholder="السعر"
+              placeholder="السعر الأساسي"
               className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
             />
             <input
@@ -135,6 +202,49 @@ export default function MenuTab({
               className="w-1/2 border border-gray-200 rounded-lg px-3 py-2 text-sm"
             />
           </div>
+
+          {/* المقاسات (اختياري): فرخة كاملة / نص / ربع... كل مقاس بسعره */}
+          <div className="bg-brand-cream rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-brand-ink/60">
+                المقاسات (اختياري) — لو الصنف له أحجام بأسعار مختلفة
+              </p>
+              <button
+                type="button"
+                onClick={addSize}
+                className="text-xs font-bold text-brand-red hover:underline flex items-center gap-0.5"
+              >
+                <Plus size={12} /> ضيف مقاس
+              </button>
+            </div>
+            {form.sizes.length === 0 ? (
+              <p className="text-[11px] text-brand-ink/40">مفيش مقاسات — الصنف بيتباع بالسعر الأساسي بس</p>
+            ) : (
+              <div className="space-y-1.5">
+                {form.sizes.map((s, i) => (
+                  <div key={i} className="flex gap-1.5 items-center">
+                    <input
+                      value={s.name_ar}
+                      onChange={(e) => updateSize(i, 'name_ar', e.target.value)}
+                      placeholder="اسم المقاس (مثلاً: نص فرخة)"
+                      className="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs bg-white"
+                    />
+                    <input
+                      value={s.price}
+                      onChange={(e) => updateSize(i, 'price', e.target.value)}
+                      type="number"
+                      placeholder="السعر"
+                      className="w-20 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs bg-white"
+                    />
+                    <button type="button" onClick={() => removeSize(i)} className="text-red-400 hover:text-red-600 shrink-0">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2">
             <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 bg-brand-red text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50">
               <Check size={14} /> {saving ? 'جاري الحفظ...' : 'حفظ'}
@@ -160,7 +270,10 @@ export default function MenuTab({
                 )}
                 <div className="min-w-0">
                   <div className="font-bold text-brand-ink text-sm truncate">{m.name_ar}</div>
-                  <div className="text-xs text-brand-ink/50">{m.price} ج {m.category && `· ${m.category}`}</div>
+                  <div className="text-xs text-brand-ink/50">
+                    {m.price} ج {m.category && `· ${m.category}`}
+                    {(m.sizes?.length || 0) > 0 && ` · ${m.sizes.length} مقاسات`}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

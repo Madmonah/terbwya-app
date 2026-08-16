@@ -119,6 +119,25 @@ export default function RiderDashboardPage() {
     }
   }
 
+  async function releaseOrder(orderId: string) {
+    setWorking(orderId);
+    try {
+      const supa = getSupabaseAuthClient();
+      const { error } = await supa.rpc('rider_release_order', { p_order_id: orderId });
+      if (error) throw error;
+      toast.success('اتحرر الطلب ورجع متاح للطيارين');
+      load();
+    } catch (e: any) {
+      toast.error(
+        e?.message === 'cannot_release_after_pickup'
+          ? 'مينفعش تسيب طلب بعد ما استلمته — كلم المطعم أو الإدارة'
+          : 'حصل خطأ'
+      );
+    } finally {
+      setWorking(null);
+    }
+  }
+
   async function updateStatus(orderId: string, status: 'out_for_delivery' | 'delivered') {
     setWorking(orderId);
     try {
@@ -343,13 +362,22 @@ export default function RiderDashboardPage() {
                     </p>
 
                     {o.status !== 'out_for_delivery' ? (
-                      <button
-                        onClick={() => updateStatus(o.id, 'out_for_delivery')}
-                        disabled={working === o.id}
-                        className="w-full bg-brand-red text-white font-black py-3 rounded-xl disabled:opacity-50"
-                      >
-                        استلمت الطلب من المطعم 🛵
-                      </button>
+                      <>
+                        <button
+                          onClick={() => updateStatus(o.id, 'out_for_delivery')}
+                          disabled={working === o.id}
+                          className="w-full bg-brand-red text-white font-black py-3 rounded-xl disabled:opacity-50"
+                        >
+                          استلمت الطلب من المطعم 🛵
+                        </button>
+                        <button
+                          onClick={() => releaseOrder(o.id)}
+                          disabled={working === o.id}
+                          className="w-full text-brand-ink/50 text-xs font-bold py-1.5 hover:text-red-600"
+                        >
+                          مش هقدر أوصّل الطلب ده — سيبه لطيار تاني
+                        </button>
+                      </>
                     ) : (
                       <button
                         onClick={() => updateStatus(o.id, 'delivered')}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { getSupabaseClient } from '@/lib/supabase';
 import OrderTracker from './OrderTracker';
 import EnableOrderNotifications from './EnableOrderNotifications';
@@ -39,6 +40,33 @@ export default function OrderLookup({ reference }: { reference: string }) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function cancelOrder() {
+    if (!order) return;
+    setCancelling(true);
+    try {
+      const supa = getSupabaseClient();
+      const { error } = await supa.rpc('cancel_order_by_customer', {
+        p_reference: order.reference,
+        p_customer_phone: order.customer_phone,
+      });
+      if (error) throw error;
+      setOrder({ ...order, status: 'cancelled' });
+      setConfirmingCancel(false);
+      toast.success('اتلغى الطلب');
+    } catch (e: any) {
+      toast.error(
+        e?.message === 'cannot_cancel'
+          ? 'المطعم بدأ يحضّر طلبك خلاص — كلمه مباشرة لو محتاج تلغي'
+          : 'حصل خطأ، حاول تاني'
+      );
+      setConfirmingCancel(false);
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   async function lookup(p: string) {
     setLoading(true);
@@ -193,6 +221,40 @@ export default function OrderLookup({ reference }: { reference: string }) {
         <p><span className="font-bold text-brand-ink">العنوان:</span> {order.delivery_address}</p>
         <p><span className="font-bold text-brand-ink">الدفع:</span> {order.payment_method === 'cod' ? 'كاش عند الاستلام' : order.payment_method}</p>
       </div>
+
+      {/* إلغاء الطلب — متاح بس قبل ما المطعم يبدأ التحضير */}
+      {['pending', 'confirmed'].includes(order.status) && (
+        <div className="mb-4">
+          {!confirmingCancel ? (
+            <button
+              onClick={() => setConfirmingCancel(true)}
+              className="w-full text-red-500 text-sm font-bold py-2 hover:underline"
+            >
+              عايز تلغي الطلب؟
+            </button>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <p className="text-sm font-bold text-red-700 mb-3">متأكد إنك عايز تلغي طلب #{order.reference}؟</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={cancelOrder}
+                  disabled={cancelling}
+                  className="flex-1 bg-red-600 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50"
+                >
+                  {cancelling ? 'جاري الإلغاء...' : 'أيوة، الغي الطلب'}
+                </button>
+                <button
+                  onClick={() => setConfirmingCancel(false)}
+                  disabled={cancelling}
+                  className="flex-1 bg-white border border-gray-200 text-brand-ink font-bold py-2.5 rounded-xl text-sm"
+                >
+                  لا، كمّل الطلب
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <Link href="/restaurants" className="block text-center bg-brand-red text-white font-extrabold py-3 rounded-xl no-underline">
         اطلب من مطعم تاني
