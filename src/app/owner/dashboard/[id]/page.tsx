@@ -246,6 +246,31 @@ export default function OwnerDashboardPage({ params }: { params: { id: string } 
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+        {/* مسودة مهجورة (سجّل ومكملش المعالج)؟ زر نشر مباشر */}
+        {restaurant.status !== 'published' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm font-bold text-amber-800">
+              ⚠️ مطعمك لسه مش منشور — العملاء مش شايفينه. كمّل بياناتك ومنيوك وانشره.
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  const supa = getSupabaseAuthClient();
+                  const { error } = await supa.rpc('publish_own_restaurant', { p_restaurant_id: restaurantId });
+                  if (error) throw error;
+                  toast.success('اتنشر مطعمك! 🎉');
+                  load();
+                } catch {
+                  toast.error('حصل خطأ في النشر');
+                }
+              }}
+              className="bg-brand-red text-white font-bold text-sm px-4 py-2 rounded-xl shrink-0"
+            >
+              انشر مطعمك دلوقتي 🚀
+            </button>
+          </div>
+        )}
+
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="إجمالي الطلبات" value={orders.length} />
           <StatCard label="طلبات قيد الانتظار" value={pendingCount} highlight={pendingCount > 0} />

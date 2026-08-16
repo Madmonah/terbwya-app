@@ -9,14 +9,19 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSupabaseAuthClient } from '@/lib/supabase';
 import { CuisineCategory } from '@/lib/types';
+import ImageUpload from '@/components/ImageUpload';
 
 type Step = 1 | 2 | 3 | 4;
+
+type DraftSize = { name_ar: string; price: string };
 
 type DraftMenuItem = {
   name_ar: string;
   price: string;
   category: string;
   description_ar: string;
+  photo_url: string;
+  sizes: DraftSize[];
 };
 
 const CITIES = [
@@ -55,14 +60,40 @@ export default function JoinWizard() {
   const [district, setDistrict] = useState('');
   const [address, setAddress] = useState('');
   const [coverPhotoUrl, setCoverPhotoUrl] = useState('');
+  const [restLocation, setRestLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  // المطعم بيتعمل كمسودة بعد خطوة الموقع — عشان رفع الصور يشتغل في خطوة المنيو
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [creatingDraft, setCreatingDraft] = useState(false);
 
   // Step 3: menu items
   const [menuItems, setMenuItems] = useState<DraftMenuItem[]>([
-    { name_ar: '', price: '', category: '', description_ar: '' },
+    { name_ar: '', price: '', category: '', description_ar: '', photo_url: '', sizes: [] },
   ]);
 
   const [submitting, setSubmitting] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+
+  function captureRestaurantLocation() {
+    if (!('geolocation' in navigator)) {
+      toast.error('المتصفح مش بيدعم تحديد الموقع');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setRestLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        toast.success('اتحدد موقع المطعم 📍 — العملاء هيشوفوا بعده عنهم والطيارين هيوصلوله بسهولة');
+      },
+      () => {
+        setLocating(false);
+        toast.error('مقدرناش نحدد الموقع — اسمح بإذن الموقع وحاول تاني');
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
 
   // Verify auth + load owner id + categories
   useEffect(() => {
@@ -103,7 +134,33 @@ export default function JoinWizard() {
   }, []);
 
   function addMenuItem() {
-    setMenuItems((items) => [...items, { name_ar: '', price: '', category: '', description_ar: '' }]);
+    setMenuItems((items) => [...items, { name_ar: '', price: '', category: '', description_ar: '', photo_url: '', sizes: [] }]);
+  }
+
+  function addItemSize(itemIdx: number) {
+    setMenuItems((items) =>
+      items.map((it, i) => (i === itemIdx ? { ...it, sizes: [...it.sizes, { name_ar: '', price: '' }] } : it))
+    );
+  }
+
+  function updateItemSize(itemIdx: number, sizeIdx: number, field: 'name_ar' | 'price', value: string) {
+    setMenuItems((items) =>
+      items.map((it, i) =>
+        i === itemIdx
+          ? { ...it, sizes: it.sizes.map((s, j) => (j === sizeIdx ? { ...s, [field]: value } : s)) }
+          : it
+      )
+    );
+  }
+
+  function removeItemSize(itemIdx: number, sizeIdx: number) {
+    setMenuItems((items) =>
+      items.map((it, i) => (i === itemIdx ? { ...it, sizes: it.sizes.filter((_, j) => j !== sizeIdx) } : it))
+    );
+  }
+
+  function setItemPhoto(itemIdx: number, url: string) {
+    setMenuItems((items) => items.map((it, i) => (i === itemIdx ? { ...it, photo_url: url } : it)));
   }
 
   function removeMenuItem(idx: number) {
@@ -130,12 +187,55 @@ export default function JoinWizard() {
     return null;
   }
 
-  function goNext() {
+  async function goNext() {
     const err = validateStep(step);
     if (err) {
       toast.error(err);
       return;
     }
+
+    // بعد خطوة الموقع: نعمل المطعم كمسودة عشان رفع الصور يشتغل في الخطوة الجاية
+    if (step === 2 && ownerId) {
+      setCreatingDraft(true);
+      try {
+        const supa = getSupabaseAuthClient();
+        const fields = {
+          name: name.trim(),
+          description: description.trim() || null,
+          cuisine_category_id: cuisineCategoryId,
+          city,
+          district: district.trim() || null,
+          address: address.trim(),
+          lat: restLocation?.lat ?? null,
+          lng: restLocation?.lng ?? null,
+        };
+        if (restaurantId) {
+          // رجع وعدّل البيانات؟ نحدّث المسودة الموجودة
+          const { error } = await supa.from('restaurants').update(fields).eq('id', restaurantId);
+          if (error) throw error;
+        } else {
+          const { data: created, error } = await supa
+            .from('restaurants')
+            .insert({
+              owner_id: ownerId,
+              slug: slugify(name),
+              status: 'pending_review',
+              ...fields,
+            })
+            .select('id')
+            .single();
+          if (error || !created) throw error || new Error('draft_failed');
+          setRestaurantId(created.id);
+        }
+      } catch (e) {
+        console.error('[join] draft error:', e);
+        toast.error('حصل خطأ، حاول تاني');
+        setCreatingDraft(false);
+        return;
+      }
+      setCreatingDraft(false);
+    }
+
     setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
   }
 
@@ -144,44 +244,62 @@ export default function JoinWizard() {
   }
 
   async function handlePublish() {
-    if (!ownerId) return;
+    if (!ownerId || !restaurantId) return;
     setSubmitting(true);
     try {
       const supa = getSupabaseAuthClient();
-      const slug = slugify(name);
 
+      // تحديث بيانات المسودة النهائية (لو رجع وعدّل حاجة)
       const { data: restaurant, error: restError } = await supa
         .from('restaurants')
-        .insert({
-          owner_id: ownerId,
-          slug,
+        .update({
           name: name.trim(),
           description: description.trim() || null,
           cuisine_category_id: cuisineCategoryId,
           city,
           district: district.trim() || null,
           address: address.trim(),
-          cover_photo_url: coverPhotoUrl.trim() || null,
-          status: 'pending_review',
+          cover_photo_url: coverPhotoUrl || null,
+          lat: restLocation?.lat ?? null,
+          lng: restLocation?.lng ?? null,
         })
+        .eq('id', restaurantId)
         .select('id, slug')
         .single();
 
-      if (restError || !restaurant) throw restError || new Error('تعذّر إنشاء المطعم');
+      if (restError || !restaurant) throw restError || new Error('تعذّر تحديث المطعم');
 
       const validItems = menuItems.filter((m) => m.name_ar.trim() && Number(m.price) > 0);
-      if (validItems.length > 0) {
-        const { error: menuError } = await supa.from('menu_items').insert(
-          validItems.map((m, idx) => ({
+      for (let idx = 0; idx < validItems.length; idx++) {
+        const m = validItems[idx];
+        const { data: inserted, error: menuError } = await supa
+          .from('menu_items')
+          .insert({
             restaurant_id: restaurant.id,
             name_ar: m.name_ar.trim(),
             price: Number(m.price),
             category: m.category.trim() || null,
             description_ar: m.description_ar.trim() || null,
+            photo_url: m.photo_url || null,
             display_order: idx,
-          }))
-        );
-        if (menuError) throw menuError;
+          })
+          .select('id')
+          .single();
+        if (menuError || !inserted) throw menuError;
+
+        // المقاسات (فرخة/نص/ربع...) لو متضافة
+        const validSizes = m.sizes.filter((s) => s.name_ar.trim() && Number(s.price) > 0);
+        if (validSizes.length > 0) {
+          const { error: sizesError } = await supa.from('menu_item_sizes').insert(
+            validSizes.map((s, i) => ({
+              menu_item_id: inserted.id,
+              name_ar: s.name_ar.trim(),
+              price: Number(s.price),
+              display_order: i + 1,
+            }))
+          );
+          if (sizesError) throw sizesError;
+        }
       }
 
       // ننشر المطعم فورًا (MVP: بدون مراجعة يدوية — ممكن تتفعّل لاحقًا)
@@ -326,19 +444,52 @@ export default function JoinWizard() {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
                 rows={2}
               />
-              <input
-                value={coverPhotoUrl}
-                onChange={(e) => setCoverPhotoUrl(e.target.value)}
-                placeholder="رابط صورة غلاف المطعم (اختياري)"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
-                dir="ltr"
-              />
+              {/* موقع المطعم بالـ GPS — عشان "الأقرب ليك" والطيارين */}
+              {restLocation ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+                  <span className="text-sm font-bold text-green-700">📍 موقع المطعم اتحدد</span>
+                  <button
+                    type="button"
+                    onClick={captureRestaurantLocation}
+                    disabled={locating}
+                    className="text-xs font-bold text-green-700 underline"
+                  >
+                    تحديث
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={captureRestaurantLocation}
+                  disabled={locating}
+                  className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-brand-red/40 text-brand-red font-bold py-2.5 rounded-lg text-sm disabled:opacity-50"
+                >
+                  📍 {locating ? 'جاري التحديد...' : 'حدد موقع المطعم بالـ GPS (وأنت في المطعم)'}
+                </button>
+              )}
+              <p className="text-[11px] text-brand-ink/40">
+                الموقع بيخلي مطعمك يظهر في "الأقرب ليك" والطيارين يوصلولك من غير لف.
+              </p>
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="font-bold text-brand-ink mb-1">أصناف المنيو</h2>
+              <h2 className="font-bold text-brand-ink mb-1">الصور والمنيو</h2>
+
+              {restaurantId && (
+                <div className="bg-brand-cream rounded-lg p-3">
+                  <ImageUpload
+                    restaurantId={restaurantId}
+                    currentUrl={coverPhotoUrl || null}
+                    onUploaded={setCoverPhotoUrl}
+                    label="صورة غلاف المطعم (بتظهر فوق صفحتك)"
+                    aspect="aspect-video"
+                  />
+                </div>
+              )}
+
+              <h3 className="font-bold text-brand-ink text-sm">أصناف المنيو</h3>
               {menuItems.map((item, idx) => (
                 <div key={idx} className="border border-gray-200 rounded-lg p-3 space-y-2 relative">
                   {menuItems.length > 1 && (
@@ -349,6 +500,15 @@ export default function JoinWizard() {
                     >
                       <Trash2 size={16} />
                     </button>
+                  )}
+                  {restaurantId && (
+                    <ImageUpload
+                      restaurantId={restaurantId}
+                      currentUrl={item.photo_url || null}
+                      onUploaded={(url) => setItemPhoto(idx, url)}
+                      label="صورة الصنف (اختياري)"
+                      aspect="aspect-square"
+                    />
                   )}
                   <input
                     value={item.name_ar}
@@ -377,6 +537,50 @@ export default function JoinWizard() {
                     placeholder="وصف الصنف (اختياري)"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   />
+
+                  {/* المقاسات: فرخة كاملة / نص / ربع... */}
+                  <div className="bg-brand-cream rounded-lg p-2.5">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-[11px] font-bold text-brand-ink/60">مقاسات بأسعار مختلفة؟ (اختياري)</p>
+                      <button
+                        type="button"
+                        onClick={() => addItemSize(idx)}
+                        className="text-[11px] font-bold text-brand-red hover:underline flex items-center gap-0.5"
+                      >
+                        <Plus size={11} /> ضيف مقاس
+                      </button>
+                    </div>
+                    {item.sizes.length === 0 ? (
+                      <p className="text-[10px] text-brand-ink/40">مثال: فرخة كاملة 180 / نص فرخة 95 / ربع 55</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {item.sizes.map((s, sIdx) => (
+                          <div key={sIdx} className="flex gap-1.5 items-center">
+                            <input
+                              value={s.name_ar}
+                              onChange={(e) => updateItemSize(idx, sIdx, 'name_ar', e.target.value)}
+                              placeholder="اسم المقاس"
+                              className="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs bg-white"
+                            />
+                            <input
+                              value={s.price}
+                              onChange={(e) => updateItemSize(idx, sIdx, 'price', e.target.value)}
+                              type="number"
+                              placeholder="السعر"
+                              className="w-20 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs bg-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeItemSize(idx, sIdx)}
+                              className="text-red-400 hover:text-red-600 shrink-0"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
               <button
@@ -421,9 +625,10 @@ export default function JoinWizard() {
               </button>
               <button
                 onClick={goNext}
-                className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl hover:bg-brand-red-dark transition-colors"
+                disabled={creatingDraft}
+                className="bg-brand-red text-white font-bold px-6 py-2.5 rounded-xl hover:bg-brand-red-dark transition-colors disabled:opacity-50"
               >
-                التالي
+                {creatingDraft ? 'ثواني...' : 'التالي'}
               </button>
             </div>
           )}

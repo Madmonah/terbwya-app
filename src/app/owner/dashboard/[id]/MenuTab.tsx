@@ -4,7 +4,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Check, X, Pencil } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
-import ImageUpload from './ImageUpload';
+import ImageUpload from '@/components/ImageUpload';
 
 type SizeForm = {
   id?: string; // موجود = مقاس محفوظ قبل كده، مش موجود = جديد

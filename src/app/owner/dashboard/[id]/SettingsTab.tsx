@@ -4,7 +4,8 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2, Save } from 'lucide-react';
 import { getSupabaseAuthClient } from '@/lib/supabase';
-import ImageUpload from './ImageUpload';
+import ImageUpload from '@/components/ImageUpload';
+import BranchesSection from './BranchesSection';
 
 export default function SettingsTab({
   restaurantId,
@@ -164,6 +165,8 @@ export default function SettingsTab({
           </div>
         </div>
       </div>
+
+      <BranchesSection restaurantId={restaurantId} />
 
       <div className="bg-violet-50 border border-violet-100 rounded-xl p-3.5 text-xs text-brand-ink/70">
         🏷️ <span className="font-bold text-brand-ink">الخصومات والعروض</span> بقى ليها تبويب خاص —

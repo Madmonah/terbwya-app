@@ -14,7 +14,7 @@ async function getRestaurant(slug: string): Promise<Restaurant | null> {
     const supa = getSupabaseClient();
     const { data } = await supa
       .from('restaurants')
-      .select('id,slug,name,description,city,district,cover_photo_url,logo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,offers:restaurant_offers(id,discount_percent,starts_at,ends_at),cuisine_category:cuisine_categories(slug,name_ar,icon)')
+      .select('id,slug,name,description,city,district,cover_photo_url,logo_url,rating,reviews_count,delivery_fee_egp,min_order_egp,avg_delivery_minutes,is_open,status,featured,offers:restaurant_offers(id,discount_percent,starts_at,ends_at),branches:restaurant_branches(id,name,city,district,address,is_open),cuisine_category:cuisine_categories(slug,name_ar,icon)')
       .eq('slug', slug)
       .eq('status', 'published')
       .single();
@@ -97,6 +97,25 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
               {restaurant.min_order_egp ? <span>الحد الأدنى للطلب: {restaurant.min_order_egp} ج.م</span> : null}
             </div>
             {restaurant.description && <p className="text-brand-ink/70 mt-3 text-sm">{restaurant.description}</p>}
+
+            {((restaurant as any).branches || []).length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-50">
+                <p className="text-xs font-bold text-brand-ink/60 mb-1.5">🏪 الفروع — طلبك بيتوصّل من أقرب فرع ليك:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[11px] bg-brand-cream text-brand-ink/70 px-2.5 py-1 rounded-full">
+                    الرئيسي: {restaurant.district || restaurant.city}
+                  </span>
+                  {((restaurant as any).branches || []).map((b: any) => (
+                    <span
+                      key={b.id}
+                      className={`text-[11px] px-2.5 py-1 rounded-full ${b.is_open ? 'bg-brand-cream text-brand-ink/70' : 'bg-gray-100 text-gray-400 line-through'}`}
+                    >
+                      {b.name}{b.district || b.city ? `: ${b.district || b.city}` : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {!restaurant.is_open && (
